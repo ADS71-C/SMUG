@@ -1,4 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
+
+resources/docker/*
+resources/results/*
+resources/*.bz2
 ### Linux template
 *~
 

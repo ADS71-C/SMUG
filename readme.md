@@ -21,6 +21,7 @@ There are several things needed to run the project correctly:
 
 * `.env` file. See `resources/.env.example` for the needed parameters
 * trained `word2vec` model.
+    * If you don't have a trained model `utils/word_vectoring_model_generator.py` can do this for you. You will need to place a wikipedia dump in the `resources` folder and alter the script to use the correct name.
 * csv files containing data. In our case this will be twitter data from our provider.
 
 # Technical information 
