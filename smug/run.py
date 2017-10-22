@@ -3,7 +3,6 @@ import subprocess
 import sys
 import os
 
-from smug.initializer import Initializer
 
 from smug.connection_manager import ConnectionManager
 
@@ -19,9 +18,7 @@ importers = 0
 
 
 def run():
-    connection_manager = ConnectionManager()
-
-    Initializer(connection_manager=connection_manager)
+    subprocess.run(['python', 'initializers/initializer.py'])
 
     for i in range(formatters):
         processes.append(subprocess.Popen(['python', 'formatters/formatter.py']))
