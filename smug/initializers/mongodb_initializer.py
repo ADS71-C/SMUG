@@ -1,6 +1,5 @@
 import pkg_resources
-from pymongo import MongoClient
-from pymongo import TEXT
+from pymongo import MongoClient, HASHED
 import os
 from dotenv import load_dotenv
 
@@ -21,4 +20,4 @@ class MongoDBInitializer:
         self.create_indexes('metadata.url')
 
     def create_indexes(self, index):
-        self.collection.create_index([(index, TEXT)], unique=True)
+        self.collection.create_index([(index, 1)], unique=True)
