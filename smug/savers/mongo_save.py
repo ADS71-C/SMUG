@@ -1,5 +1,5 @@
 import pkg_resources
-from pymongo import MongoClient
+from pymongo import MongoClient, UpdateOne
 import os
 from dotenv import load_dotenv
 from time import time
@@ -17,7 +17,10 @@ class MongoSave():
 
     def save(self):
         if len(self.buffer) > 0:
-            collection.insert_many(self.buffer.values())
+            requests = [UpdateOne({'metadata.url': value['metadata']['url']}, {'$set': value}, upsert=True)
+                        for value in self.buffer.values()]
+            collection.bulk_write(requests)
+
             for delivery_tag in self.buffer:
                 # Ack to the MQ
                 self.ch.basic_ack(delivery_tag=delivery_tag)
