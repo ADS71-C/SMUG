@@ -20,7 +20,6 @@ class CsvImporter:
         df = pd.read_csv(filename, sep=';')
         df = df.drop_duplicates(subset='url', keep='first')
         for inex, row in df.iterrows():
-            sleep(2)
             connection_manager.publish('formatting', row.to_json())
 
 
