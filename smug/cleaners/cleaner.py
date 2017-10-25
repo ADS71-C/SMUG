@@ -22,5 +22,5 @@ def callback(ch, method, properties, body):
 
 if __name__ == '__main__':
     connection_manager = ConnectionManager()
-    connection_manager.subscribe('cleaning', callback)
+    connection_manager.subscribe_to_queue('cleaning', callback)
     print('Cleaner started')

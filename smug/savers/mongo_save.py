@@ -81,4 +81,4 @@ if __name__ == '__main__':
     mongo_save = MongoSave(write_buffer_size=write_buffer_size)
     watchdog = MongoSaveWatchdog(callback=mongo_save.save, threshold=1)
     connection_manager = ConnectionManager()
-    connection_manager.subscribe('save', mongo_save.callback)
+    connection_manager.subscribe_to_queue('save', mongo_save.callback)

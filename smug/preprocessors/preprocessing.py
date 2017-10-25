@@ -23,4 +23,4 @@ if __name__ == '__main__':
     re_words = re.compile(r'(\w+-?\w*)')
 
     connection_manager = ConnectionManager()
-    connection_manager.subscribe('preprocessing', callback)
+    connection_manager.subscribe_to_queue('preprocessing', callback)

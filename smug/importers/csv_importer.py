@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 import pandas as pd
 import pkg_resources
-from time import sleep
+import hashlib
 
 from smug.connection_manager import ConnectionManager
 
@@ -19,8 +19,19 @@ class CsvImporter:
         print('Sending {}'.format(file))
         df = pd.read_csv(filename, sep=';')
         df = df.drop_duplicates(subset='url', keep='first')
+
+        dtypes = str(df.dtypes.values)
+        dtypes_hash = hashlib.md5(dtypes.encode()).hexdigest()
+
+        type = ''
+        if dtypes_hash == '72197921735611c48d8114efb03740ce':
+            type += 'formatter.coosto'
+
         for inex, row in df.iterrows():
-            connection_manager.publish('formatting', row.to_json())
+            if type != '':
+                connection_manager.publish_to_exchange(type, row.to_json())
+            else:
+                connection_manager.publish_to_queue('cleaning', row.to_json())
 
 
 if __name__ == '__main__':
