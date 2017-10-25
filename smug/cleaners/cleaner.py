@@ -1,6 +1,6 @@
 import simplejson as json
 
-from smug.callback_helper import CallbackHelper
+from smug.callback_helper import CallbackForward
 from smug.connection_manager import ConnectionManager
 
 
@@ -14,6 +14,7 @@ def clean(message):
     return message
 
 
+@CallbackForward('preprocessing')
 def callback(ch, method, properties, body):
     message = json.loads(body)
     return clean(message)
@@ -21,6 +22,5 @@ def callback(ch, method, properties, body):
 
 if __name__ == '__main__':
     connection_manager = ConnectionManager()
-    callback_helper = CallbackHelper(callback=callback, forward_channel_type='preprocessing')
-    connection_manager.subscribe('cleaning', callback_helper.wrapped_callback)
+    connection_manager.subscribe('cleaning', callback)
     print('Cleaner started')
