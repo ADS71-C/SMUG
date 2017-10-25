@@ -2,7 +2,7 @@ from gensim.models.word2vec import Word2Vec
 import pkg_resources
 import json
 
-from smug.callback_helper import CallbackHelper
+from smug.callback_helper import CallbackForward
 from smug.connection_manager import ConnectionManager
 
 
@@ -20,6 +20,7 @@ def score(message):
     return message
 
 
+@CallbackForward("save")
 def callback(ch, method, properties, body):
     message = json.loads(body)
     return score(message)
@@ -38,5 +39,4 @@ if __name__ == '__main__':
     model_location = pkg_resources.resource_filename('resources', 'word2vec.model')
     model = Word2Vec.load(model_location)
     connection_manager = ConnectionManager()
-    callback_helper = CallbackHelper(callback=callback, forward_channel_type='save')
-    connection_manager.subscribe('processing', callback_helper.wrapped_callback)
+    connection_manager.subscribe('processing', callback)

@@ -1,7 +1,7 @@
 import re
 import simplejson as json
 
-from smug.callback_helper import CallbackHelper
+from smug.callback_helper import CallbackForward
 from smug.connection_manager import ConnectionManager
 
 
@@ -12,6 +12,7 @@ def split_words(message):
     return message
 
 
+@CallbackForward('processing')
 def callback(ch, method, properties, body):
     message = json.loads(body)
     return split_words(message)
@@ -22,5 +23,4 @@ if __name__ == '__main__':
     re_words = re.compile(r'(\w+-?\w*)')
 
     connection_manager = ConnectionManager()
-    callback_helper = CallbackHelper(callback=callback, forward_channel_type='processing')
-    connection_manager.subscribe('preprocessing', callback_helper.wrapped_callback)
+    connection_manager.subscribe('preprocessing', callback)
