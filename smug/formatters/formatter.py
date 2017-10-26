@@ -26,4 +26,4 @@ def callback(ch, method, properties, body):
 
 if __name__ == '__main__':
     connection_manager = ConnectionManager()
-    connection_manager.subscribe('formatting', callback)
+    connection_manager.subscribe_to_routing_key('formatter.coosto', callback)

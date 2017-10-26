@@ -39,4 +39,4 @@ if __name__ == '__main__':
     model_location = pkg_resources.resource_filename('resources', 'word2vec.model')
     model = Word2Vec.load(model_location)
     connection_manager = ConnectionManager()
-    connection_manager.subscribe('processing', callback)
+    connection_manager.subscribe_to_queue('processing', callback)
