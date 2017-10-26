@@ -31,8 +31,14 @@ services:
       - influx
   mongodb:
     image: mongo:latest
+    expose:
+      - 27017
     ports:
       - "27017:27017"
     volumes:
       - ./resources/docker/mongodb:/data/db
-
+  spark:
+    build: ./resources/pyspark/.
+    hostname: spark
+    links:
+      - mongodb
