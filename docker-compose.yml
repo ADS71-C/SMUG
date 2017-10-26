@@ -31,6 +31,19 @@ services:
       - influx
   mongodb:
     image: mongo:latest
+    expose:
+      - 27017
     ports:
       - "27017:27017"
+    networks:
+      - connector
+  spark:
+    build: ./resources/pyspark/.
+    hostname: spark
+    links:
+      - mongodb
+    networks:
+      - connector
 
+networks:
+  connector:
