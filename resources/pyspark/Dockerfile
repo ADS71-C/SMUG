@@ -15,7 +15,7 @@ RUN useradd --create-home --shell /bin/bash ubuntu
 ENV HOME /home/ubuntu
 ENV SPARK_VERSION 2.2.0
 ENV HADOOP_VERSION 2.7
-ENV MONGO_SPARK_VERSION 2.0.0-rc0
+ENV MONGO_SPARK_VERSION 2.2
 ENV SCALA_VERSION 2.10
 
 WORKDIR ${HOME}
@@ -27,7 +27,10 @@ RUN chown -R ubuntu:ubuntu /home/ubuntu/*
 USER ubuntu
 
 # get spark
-RUN wget https://www.apache.org/dyn/closer.lua/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
+RUN wget http://ftp.tudelft.nl/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
 tar xvf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
 
 RUN rm -fv spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+
+RUN cp ${SPARK_HOME}/conf/spark-defaults.conf.template ${SPARK_HOME}/conf/spark-defaults.conf
+RUN echo 'spark.jars.packages org.mongodb.spark:mongo-spark-connector_${SCALA_VERSION}:${MONGO_SPARK_VERSION}' >> ${SPARK_HOME}/conf/spark-defaults.conf
