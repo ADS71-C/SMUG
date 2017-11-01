@@ -9,14 +9,14 @@ class MongoDBInitializer:
         env_location = pkg_resources.resource_filename('resources', '.env')
         load_dotenv(env_location)
 
-        mongourl = os.environ.get("MONGO_URL", "localhost")
-        database = os.environ.get("MONGO_DATABASE", "smug")
-        collection = os.environ.get("MONGO_COLLECTION", "smug")
+        mongouri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/smug")
+        mongodb = os.environ.get("MONGODB_DATABASE", "smug")
+        mongocollection = os.environ.get("MONGODB_COLLECTION", "smug")
+        client = MongoClient(mongouri)
+        db = client[mongodb]
+        self.collection = db[mongocollection]
 
-        client = MongoClient(mongourl, 27017)
-        db = client[database]
-
-        self.collection = db[collection]
+        # self.collection = db[collection]
         self.create_indexes('metadata.url')
 
     def create_indexes(self, index):

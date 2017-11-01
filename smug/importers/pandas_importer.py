@@ -15,7 +15,7 @@ class PandasImporter:
         dtypes_hash = hashlib.md5(dtypes.encode()).hexdigest()
 
         try:
-            type = dtypes[dtypes_hash]
+            type = self.dtypes[dtypes_hash]
         except KeyError:
             type = None
 

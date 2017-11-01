@@ -68,15 +68,17 @@ class MongoSaveWatchdog:
 if __name__ == '__main__':
     env_location = pkg_resources.resource_filename('resources', '.env')
     load_dotenv(env_location)
-    mongourl = os.environ.get("MONGODBURL", "localhost")
-    write_buffer_size = int(os.environ.get("MONGO_WRITE_BUFFER", 100))
+    mongouri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/smug")
+    mongodb = os.environ.get("MONGODB_DATABASE", "smug")
+    mongocollection = os.environ.get("MONGODB_COLLECTION", "smug")
+    write_buffer_size = int(os.environ.get("MONGODB_WRITE_BUFFER", 100))
     prefetch_count = int(os.environ.get("PREFETCH_COUNT", 500))
 
     if write_buffer_size > prefetch_count:
         raise ValueError('MongoDB write buffer should not exceed prefetch count. This will cause the')
-    client = MongoClient(mongourl, 27017)
-    db = client['smug']
-    collection = db['smug']
+    client = MongoClient(mongouri)
+    db = client[mongodb]
+    collection = db[mongocollection]
 
     mongo_save = MongoSave(write_buffer_size=write_buffer_size)
     watchdog = MongoSaveWatchdog(callback=mongo_save.save, threshold=1)
