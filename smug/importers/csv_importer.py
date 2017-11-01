@@ -4,7 +4,7 @@ import pkg_resources
 
 from smug.connection_manager import ConnectionManager
 
-from .pandas_importer import PandasImporter
+from smug.importers.pandas_importer import PandasImporter
 
 
 class CsvImporter(PandasImporter):
