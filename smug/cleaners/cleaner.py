@@ -14,7 +14,7 @@ def clean(message):
     return message
 
 
-@CallbackForward('preprocessing')
+@CallbackForward('preprocess')
 def callback(ch, method, properties, body):
     message = json.loads(body)
     return clean(message)
@@ -22,5 +22,5 @@ def callback(ch, method, properties, body):
 
 if __name__ == '__main__':
     connection_manager = ConnectionManager()
-    connection_manager.subscribe_to_queue('cleaning', callback)
+    connection_manager.subscribe_to_queue('clean', callback)
     print('Cleaner started')

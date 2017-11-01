@@ -23,4 +23,4 @@ class PandasImporter:
             if type is not None:
                 self.connection_manager.publish_to_exchange(type, row.to_json())
             else:
-                self.connection_manager.publish_to_queue('cleaning', row.to_json())
+                self.connection_manager.publish_to_queue('clean', row.to_json())

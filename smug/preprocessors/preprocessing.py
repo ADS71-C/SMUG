@@ -12,7 +12,7 @@ def split_words(message):
     return message
 
 
-@CallbackForward('processing')
+@CallbackForward('process')
 def callback(ch, method, properties, body):
     message = json.loads(body)
     return split_words(message)
@@ -23,4 +23,4 @@ if __name__ == '__main__':
     re_words = re.compile(r'(\w+-?\w*)')
 
     connection_manager = ConnectionManager()
-    connection_manager.subscribe_to_queue('preprocessing', callback)
+    connection_manager.subscribe_to_queue('preprocess', callback)
