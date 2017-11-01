@@ -21,15 +21,9 @@ class GzImporter:
 
         with gzip.open(filename, 'rt') as f:
             print('Sending {}'.format(file))
-            contents = f.read()
+            for content in f.readlines():
+                original_message = json.loads(content)
 
-            contents = contents.replace('\n', ',')
-            contents = contents.rsplit(',', 1)[0]
-            contents = "[{}]".format(contents)
-
-            df = pd.read_json(contents, encoding='records')
-
-            for inex, original_message in df.iterrows():
                 formatted_message = {
                     'message': original_message['text'],
                     'author': original_message['user']['name'],
@@ -48,6 +42,35 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     files = args.files
+
+    base = '20170102-{}.out.gz'
+
+    files = [
+        base.format('00'),
+        base.format('01'),
+        base.format('02'),
+        base.format('03'),
+        base.format('04'),
+        base.format('05'),
+        base.format('06'),
+        base.format('07'),
+        base.format('08'),
+        base.format('09'),
+        base.format('10'),
+        base.format('11'),
+        base.format('12'),
+        base.format('13'),
+        base.format('14'),
+        base.format('15'),
+        base.format('16'),
+        base.format('17'),
+        base.format('18'),
+        base.format('19'),
+        base.format('20'),
+        base.format('21'),
+        base.format('22'),
+        base.format('23')
+    ]
 
     if files is None:
         files = input('Please provide a csv file for processing').split(',')
