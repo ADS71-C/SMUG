@@ -1,23 +1,25 @@
-import pkg_resources
-from pymongo import MongoClient, HASHED
-import os
-from dotenv import load_dotenv
+from mongo_manager import MongoManager
 
 
 class MongoDBInitializer:
     def __init__(self):
-        env_location = pkg_resources.resource_filename('resources', '.env')
-        load_dotenv(env_location)
+        self.mongo_manager = MongoManager()
+        self.create_indexes('metadata.url', self.mongo_manager.message_collection, unique=True)
+        self.create_indexes('analytics.sickness_score', self.mongo_manager.message_collection)
+        self.create_indexes('name', self.mongo_manager.report_collection, unique=True)
+        default_reports = [{'name': 'Word vectoring', 'enabled': True, 'parameters': [
+            'ziek',
+            'griep',
+            'verkouden',
+            'verkoudheid',
+            'koorts',
+            'hoofdpijn',
+        ]}]
+        for report in default_reports:
+            self.create_report(report)
 
-        mongouri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/smug")
-        mongodb = os.environ.get("MONGODB_DATABASE", "smug")
-        mongocollection = os.environ.get("MONGODB_COLLECTION", "smug")
-        client = MongoClient(mongouri)
-        db = client[mongodb]
-        self.collection = db[mongocollection]
+    def create_indexes(self, index, collection, unique=False):
+        collection.create_index([(index, 1)], unique=unique)
 
-        # self.collection = db[collection]
-        self.create_indexes('metadata.url')
-
-    def create_indexes(self, index):
-        self.collection.create_index([(index, 1)], unique=True)
+    def create_report(self, report):
+        self.mongo_manager.report_collection.update_one({'name': report['name']}, {'$set': report}, upsert=True)
