@@ -5,11 +5,11 @@ import pkg_resources
 from dotenv import load_dotenv
 
 queues = {
-    'formatting': os.environ.get("FORMATTING_QUEUE_NAME", "formatting"),
-    'cleaning': os.environ.get("CLEANING_QUEUE_NAME", "cleaning"),
-    'preprocessing': os.environ.get("PREPROCESSING_QUEUE_NAME", "preprocessing"),
-    'processing': os.environ.get("PROCESSING", "processing"),
-    'save': os.environ.get("SAVE_QUEUE_NAME", "save"),
+    'format': os.environ.get("FORMATTING_QUEUE_NAME", "1_format"),
+    'clean': os.environ.get("CLEANING_QUEUE_NAME", "2_clean"),
+    'preprocess': os.environ.get("PREPROCESSING_QUEUE_NAME", "3_preprocess"),
+    'process': os.environ.get("PROCESSING", "4_process"),
+    'save': os.environ.get("SAVE_QUEUE_NAME", "5_save"),
 
 }
 

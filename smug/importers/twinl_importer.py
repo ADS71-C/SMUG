@@ -33,7 +33,7 @@ class GzImporter:
                         'type': 'post',
                     }
                 }
-                self.connection_manager.publish_to_queue('cleaning', json.dumps(formatted_message))
+                self.connection_manager.publish_to_queue('clean', json.dumps(formatted_message))
 
 
 if __name__ == '__main__':
