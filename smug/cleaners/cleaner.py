@@ -7,7 +7,7 @@ from smug.connection_manager import ConnectionManager
 def clean(message):
     if message['message'] is None:
         message['message'] = ''
-    if 'rt' in message['message']:
+    if 'rt' in message['message'].lower():
         return None
     if 'http' in message['message']:
         return None
