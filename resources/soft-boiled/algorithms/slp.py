@@ -21,13 +21,13 @@ def median(distance_func, vertices, weights=None):
     """
 
     #get the distance between any two points
-    distances = map(lambda (v0, v1) :distance_func(v0.geo_coord, v1.geo_coord), itertools.combinations (vertices, 2))
+    distances = [distance_func(v0_v1[0].geo_coord, v0_v1[1].geo_coord) for v0_v1 in itertools.combinations (vertices, 2)]
 
     #create a dictionary with keys representing the index of a location
     m = { a: list() for a in range(len(vertices)) }
 
     #add the distances from each point to the dict
-    for (k0,k1),distance in zip(itertools.combinations(range(len(vertices)), 2), distances):
+    for (k0,k1),distance in zip(itertools.combinations(list(range(len(vertices))), 2), distances):
         #a distance can be None if one of the vertices does not have a geocoord
         if(weights is None):
             m[k0].append(distance)
@@ -39,7 +39,7 @@ def median(distance_func, vertices, weights=None):
             m[k1].extend([distance]*weights[k0])
 
 
-    summed_values = map(sum, m.itervalues())
+    summed_values = list(map(sum, iter(m.values())))
 
     idx = summed_values.index(min(summed_values))
 
@@ -82,10 +82,10 @@ def get_known_locs(sqlCtx, table_name, include_places=True,  min_locs=3, num_par
         geo_coords = geo_coords.union(place_coords)
 
     return geo_coords.groupByKey()\
-        .filter(lambda (id_str,coord_list): len(coord_list) >= min_locs)\
-            .map(lambda (id_str,coords): (id_str, median(haversine, [LocEstimate(GeoCoord(lat,lon), None, None)\
-                for lat,lon in coords])))\
-            .filter(lambda (id_str, loc): loc.dispersion < dispersion_threshold)\
+        .filter(lambda id_str_coord_list: len(id_str_coord_list[1]) >= min_locs)\
+            .map(lambda id_str_coords: (id_str_coords[0], median(haversine, [LocEstimate(GeoCoord(lat,lon), None, None)\
+                for lat,lon in id_str_coords[1]])))\
+            .filter(lambda id_str_loc: id_str_loc[1].dispersion < dispersion_threshold)\
             .coalesce(num_partitions).cache()
 
 
@@ -109,9 +109,9 @@ def get_edge_list(sqlCtx, table_name, num_partitions=300):
                                if mentioned_user.id_str is not None and row.id_str !=  mentioned_user.id_str])\
             .reduceByKey(lambda x,y:x+y)
 
-    return tmp_edges.map(lambda ((src_id,dest_id),num_mentions): ((dest_id,src_id),num_mentions))\
+    return tmp_edges.map(lambda src_id_dest_id_num_mentions: ((src_id_dest_id_num_mentions[0][1],src_id_dest_id_num_mentions[0][0]),src_id_dest_id_num_mentions[1]))\
         .join(tmp_edges)\
-            .map(lambda ((src_id,dest_id), (count0, count1)): (src_id, (dest_id, min(count0,count1))))\
+            .map(lambda src_id_dest_id_count0_count1: (src_id_dest_id_count0_count1[0][0], (src_id_dest_id_count0_count1[0][1], min(src_id_dest_id_count0_count1[1][0],src_id_dest_id_count0_count1[1][1]))))\
             .coalesce(num_partitions).cache()
 
 
@@ -136,20 +136,20 @@ def train_slp(locs_known, edge_list, num_iters, neighbor_threshold=3, dispersion
     num_partitions = edge_list.getNumPartitions()
 
     # Filter edge list so we never attempt to estimate a "known" location
-    filtered_edge_list = edge_list.keyBy(lambda (src_id, (dst_id, weight)): dst_id)\
+    filtered_edge_list = edge_list.keyBy(lambda src_id_dst_id_weight: src_id_dst_id_weight[1][0])\
                             .leftOuterJoin(locs_known)\
-                            .flatMap(lambda (dst_id, (edge, loc_known)): [edge] if loc_known is None else [] )
+                            .flatMap(lambda dst_id_edge_loc_known: [dst_id_edge_loc_known[1][0]] if dst_id_edge_loc_known[1][1] is None else [] )
 
     l = locs_known
 
     for i in range(num_iters):
         l = filtered_edge_list.join(l)\
-            .map(lambda (src_id, ((dst_id, weight), known_vertex)) : (dst_id, (known_vertex, weight)))\
+            .map(lambda src_id_dst_id_weight_known_vertex : (src_id_dst_id_weight_known_vertex[0][0], (src_id_dst_id_weight_known_vertex[1][1], src_id_dst_id_weight_known_vertex[0][1])))\
             .groupByKey()\
-            .filter(lambda (src_id, neighbors) : neighbors.maxindex >= neighbor_threshold)\
-            .map(lambda (src_id, neighbors) :\
-                 (src_id, median(haversine, [v for v,w in neighbors],[w for v,w in neighbors])))\
-            .filter(lambda (src_id, estimated_loc): estimated_loc.dispersion < dispersion_threshold)\
+            .filter(lambda src_id_neighbors : src_id_neighbors[1].maxindex >= neighbor_threshold)\
+            .map(lambda src_id_neighbors1 :\
+                 (src_id_neighbors1[0], median(haversine, [v for v,w in src_id_neighbors1[1]],[w for v,w in src_id_neighbors1[1]])))\
+            .filter(lambda src_id_estimated_loc: src_id_estimated_loc[1].dispersion < dispersion_threshold)\
             .union(locs_known).coalesce(num_partitions)
 
     return l
@@ -205,21 +205,21 @@ def evaluate(locs_known, edges, holdout_func, slp_closure):
             `holdout_ratio:` ratio of the holdout set to the entire set
         '''
 
-    reserved_locs = locs_known.filter(lambda (src_id, loc): not holdout_func(src_id))
+    reserved_locs = locs_known.filter(lambda src_id_loc: not holdout_func(src_id_loc[0]))
     num_locs = reserved_locs.count()
     total_locs = locs_known.count()
 
-    print('Total Locations %s' % total_locs)
+    print(('Total Locations %s' % total_locs))
 
     results = slp_closure(reserved_locs, edges)
 
     errors = results\
-        .filter(lambda (src_id, loc): holdout_func(src_id))\
+        .filter(lambda src_id_loc2: holdout_func(src_id_loc2[0]))\
         .join(locs_known)\
-        .map(lambda (src_id, (vtx_found, vtx_actual)) :\
-             (src_id, (haversine(vtx_found.geo_coord, vtx_actual.geo_coord), vtx_found)))
+        .map(lambda src_id_vtx_found_vtx_actual :\
+             (src_id_vtx_found_vtx_actual[0], (haversine(src_id_vtx_found_vtx_actual[1][0].geo_coord, src_id_vtx_found_vtx_actual[1][1].geo_coord), src_id_vtx_found_vtx_actual[1][0])))
 
-    errors_local = errors.map(lambda (src_id, (dist, est_loc)) : dist).collect()
+    errors_local = errors.map(lambda src_id_dist_est_loc : src_id_dist_est_loc[1][0]).collect()
 
     #because cannot easily calculate median in RDDs we will bring deltas local for stats calculations.
     #With larger datasets, we may need to do this in the cluster, but for now will leave.

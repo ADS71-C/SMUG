@@ -66,32 +66,30 @@ class EstimatorCurve:
         '''
 
         # Filter edge list so we never attempt to estimate a "known" location
-        known_edges = edges.keyBy(lambda (src_id, (dst_id, weight)): dst_id)\
+        known_edges = edges.keyBy(lambda src_id_dst_id_weight: src_id_dst_id_weight[1][0])\
             .leftOuterJoin(locs_known)\
-            .flatMap(lambda (dst_id, (edge, loc_known)): [edge] if loc_known is not None else [] )
+            .flatMap(lambda dst_id_edge_loc_known: [dst_id_edge_loc_known[1][0]] if dst_id_edge_loc_known[1][1] is not None else [] )
 
 
         medians =  known_edges.join(locs_known)\
-            .map(lambda (src_id, ((dst_id, weight), src_loc)) : (dst_id, (src_loc, weight)))\
+            .map(lambda src_id_dst_id_weight_src_loc : (src_id_dst_id_weight_src_loc[0][0], (src_id_dst_id_weight_src_loc[1][1], src_id_dst_id_weight_src_loc[0][1])))\
             .groupByKey()\
-            .filter(lambda (src_id, neighbors) : len(neighbors) >= neighbor_threshold)\
+            .filter(lambda src_id_neighbors : len(src_id_neighbors[1]) >= neighbor_threshold)\
             .mapValues(lambda neighbors :\
                        median(haversine, [loc for loc,w in neighbors], [w for loc,w in neighbors]))\
             .join(locs_known)\
-            .mapValues(lambda (found_loc, known_loc) :\
-                (found_loc, known_loc,  haversine(known_loc.geo_coord,  found_loc.geo_coord)))\
-            .filter(lambda (src_id, (found_loc, known_loc, dist)) : found_loc.dispersion < dispersion_threshold)
+            .mapValues(lambda found_loc_known_loc :\
+                (found_loc_known_loc[0], found_loc_known_loc[1],  haversine(found_loc_known_loc[1].geo_coord,  found_loc_known_loc[0].geo_coord)))\
+            .filter(lambda src_id_found_loc_known_loc_dist : src_id_found_loc_known_loc_dist[1][0].dispersion < dispersion_threshold)
 
         #some medians might have std_devs of zero
-        close_locs = medians.filter(lambda (src_id, (found_loc, known_loc, dist)) : found_loc.dispersion_std_dev == 0)
+        close_locs = medians.filter(lambda src_id_found_loc_known_loc_dist1 : src_id_found_loc_known_loc_dist1[1][0].dispersion_std_dev == 0)
         #remaining_locs = medians.filter(lambda (src_id, (found_loc, known_loc, dist)) : found_loc.dispersion_std_dev != 0)
 
-        values = medians.map(lambda (src_id, (found_loc, known_loc, dist)) :\
-            (src_id, ((dist-found_loc.dispersion)/found_loc.dispersion_std_dev if found_loc.dispersion_std_dev != 0 else 0)))\
-            .values()
+        values = list(medians.map(lambda src_id_found_loc_known_loc_dist2 :\
+            (src_id_found_loc_known_loc_dist2[0], ((src_id_found_loc_known_loc_dist2[1][2]-src_id_found_loc_known_loc_dist2[1][0].dispersion)/src_id_found_loc_known_loc_dist2[1][0].dispersion_std_dev if src_id_found_loc_known_loc_dist2[1][0].dispersion_std_dev != 0 else 0))).values())
 
-        values_wo_stdev = close_locs.map(lambda (src_id, (found_loc, known_loc, dist)): (src_id, dist))\
-                                                .values()
+        values_wo_stdev = list(close_locs.map(lambda src_id_found_loc_known_loc_dist3: (src_id_found_loc_known_loc_dist3[0], src_id_found_loc_known_loc_dist3[1][2])).values())
 
         return EstimatorCurve(EstimatorCurve.build_curve(values, desired_samples),\
             EstimatorCurve.build_curve(values_wo_stdev, desired_samples))
@@ -119,10 +117,10 @@ class EstimatorCurve:
 
         if(cnt > desired_samples):
             sample = vals.sample(False, desired_samples/float(cnt), 45)
-            print("Before sample: ", cnt, " records")
+            print(("Before sample: ", cnt, " records"))
             cnt = sample.count()
 
-        print("Sample count: ", cnt)
+        print(("Sample count: ", cnt))
 
         return np.column_stack((np.sort(sample.collect()), np.arange(cnt)/float(cnt)))
 
@@ -173,14 +171,14 @@ class EstimatorCurve:
 
         x_vals = np.arange(.1,1,.05)
 
-        local = eval_rdd.map(lambda (src_id, (dist, loc_estimate)) :\
-            [1 if EstimatorCurve.lookup_static(b_curve.value, pct, axis=1) > (dist - loc_estimate.dispersion)/loc_estimate.dispersion_std_dev\
+        local = eval_rdd.map(lambda src_id_dist_loc_estimate :\
+            [1 if EstimatorCurve.lookup_static(b_curve.value, pct, axis=1) > (src_id_dist_loc_estimate[1][0] - src_id_dist_loc_estimate[1][1].dispersion)/src_id_dist_loc_estimate[1][1].dispersion_std_dev\
             else 0 for pct in x_vals])\
             .collect()
 
         y_vals = np.sum(np.array([np.array(xi) for xi in local]), axis=0)/float(len(local))
 
-        print("sum of difference of squares: %s" % np.sum(np.sqrt((y_vals - x_vals)**2)))
+        print(("sum of difference of squares: %s" % np.sum(np.sqrt((y_vals - x_vals)**2))))
         plt.plot(x_vals, x_vals)
         plt.plot(x_vals, y_vals)
         plt.show()
@@ -197,12 +195,12 @@ class EstimatorCurve:
         test_radius = [0.5,1,5,10,25,50,75,100,150,200,250,300,400,500,600,700,800,900,1000]
         b_curve = sc.broadcast(self.w_stdev)
 
-        actual_pcts = eval_rdd.map(lambda (src_id, (dist, loc_estimate)) : \
-                    [1 if dist <= radius else 0 for radius in test_radius]).collect()
+        actual_pcts = eval_rdd.map(lambda src_id_dist_loc_estimate4 : \
+                    [1 if src_id_dist_loc_estimate4[1][0] <= radius else 0 for radius in test_radius]).collect()
         y_vals_act_pct = np.sum(np.array([np.array(xi) for xi in actual_pcts]), axis=0)/float(len(actual_pcts))
 
-        predict_pcts = eval_rdd.map(lambda (src_id, (dist, loc_estimate)) : \
-            [EstimatorCurve.lookup_static(b_curve, (radius-loc_estimate.dispersion)/loc_estimate.dispersion_std_dev if loc_estimate.dispersion_std_dev !=0 else 0, axis=0)\
+        predict_pcts = eval_rdd.map(lambda src_id_dist_loc_estimate5 : \
+            [EstimatorCurve.lookup_static(b_curve, (radius-src_id_dist_loc_estimate5[1][1].dispersion)/src_id_dist_loc_estimate5[1][1].dispersion_std_dev if src_id_dist_loc_estimate5[1][1].dispersion_std_dev !=0 else 0, axis=0)\
              for radius in test_radius]).collect()
 
         y_vals_pred_pct = np.sum(np.array([np.array(xi) for xi in predict_pcts]), axis=0)/float(len(predict_pcts))
@@ -254,8 +252,8 @@ class EstimatorCurve:
 
         np.savetxt(open(name+"_curve.csv",'w'), self.w_stdev, delimiter=",")
         np.savetxt(open(name+"_curve_zero_stdev.csv", "w"), self.wo_stdev, delimiter=",")
-        print("Saved estimator curve as \'%s.curve\'" % name)
-        print("Saved estimator curve with 0 stdev as \'%s.curve_zero_stdev\'" % name)
+        print(("Saved estimator curve as \'%s.curve\'" % name))
+        print(("Saved estimator curve with 0 stdev as \'%s.curve_zero_stdev\'" % name))
 
     @staticmethod
     def load_from_file(name="estimator"):

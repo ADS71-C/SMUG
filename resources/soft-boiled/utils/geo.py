@@ -17,7 +17,7 @@ def haversine(x, y):
         raise Exception("Null coordinate")
 
     # convert decimal degrees to radians
-    lon1, lat1, lon2, lat2 = map(math.radians, [x.lon, x.lat, y.lon, y.lat])
+    lon1, lat1, lon2, lat2 = list(map(math.radians, [x.lon, x.lat, y.lon, y.lat]))
     # haversine formula
     dlon = lon2 - lon1
     dlat = lat2 - lat1
@@ -99,8 +99,8 @@ def find_best_region(geo_coord_rdd, shapefile_path, region_name, sc):
     df_map, m = shapefile_2_df(shapefile_path, region_name, GeoCoord(89.9, 180.0),\
                                GeoCoord(-89.9, -180.0), proj='cyl', ellipse='WGS84')
 
-    bounding_boxes=zip(df_map['region_name'],df_map['poly'].map(lambda (row) :\
-        (GeoCoord(row.bounds[1], row.bounds[0]), GeoCoord(row.bounds[3], row.bounds[2]))))
+    bounding_boxes=list(zip(df_map['region_name'],df_map['poly'].map(lambda row :\
+        (GeoCoord(row.bounds[1], row.bounds[0]), GeoCoord(row.bounds[3], row.bounds[2])))))
 
     # Convert Bounding boxes to allow for more efficient lookups
     bb_lookup_lat = defaultdict(set)
@@ -128,8 +128,8 @@ def find_best_region(geo_coord_rdd, shapefile_path, region_name, sc):
     df_bcast = sc.broadcast(df_map)
 
 
-    return polycode.mapValues(lambda (id_list, geo_coord):\
-        country_finder(geo_coord, id_list, df_bcast.value, m))
+    return polycode.mapValues(lambda id_list_geo_coord:\
+        country_finder(id_list_geo_coord[1], id_list_geo_coord[0], df_bcast.value, m))
 
 
 
