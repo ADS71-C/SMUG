@@ -1,6 +1,6 @@
 from sklearn import mixture
 import numpy as np
-import urlparse
+import urllib.parse
 # local includes
 from src.utils.geo import bb_center, GeoCoord, haversine
 import statsmodels.sandbox.distributions.extras as ext
@@ -64,10 +64,10 @@ def tokenize_tweet(inputRow, fields):
         updates_to_make = []
         if inputRow.entities and inputRow.entities.urls:
             for url_row in inputRow.entities.urls:
-                updates_to_make.append((url_row.url, urlparse.urlparse(url_row.expanded_url).netloc.replace('.', '_')))
+                updates_to_make.append((url_row.url, urllib.parse.urlparse(url_row.expanded_url).netloc.replace('.', '_')))
         if inputRow.extended_entities and inputRow.extended_entities.media:
             for media_row in inputRow.extended_entities.media:
-                updates_to_make.append((media_row.url, urlparse.urlparse(media_row.expanded_url).netloc.replace('.', '_')))
+                updates_to_make.append((media_row.url, urllib.parse.urlparse(media_row.expanded_url).netloc.replace('.', '_')))
         for (original, new_string) in updates_to_make:
             text = text.replace(original, new_string)
 
@@ -296,7 +296,7 @@ def predict_user_gmm(sc, tweets_to_predict, fields, model, radius=None, predict_
     loc_est_by_user = tweets_by_user\
         .mapValues(lambda tokens: list(itertools.chain(*tokens)))\
         .flatMapValues(lambda tokens: get_most_likely_point(tokens, model_bcast, radius=radius))\
-        .filter(lambda (id_str, est_loc): est_loc.prob >= predict_lower_bound or radius is None)
+        .filter(lambda id_str_est_loc: id_str_est_loc[1].prob >= predict_lower_bound or radius is None)
 
     return loc_est_by_user
 
@@ -323,11 +323,11 @@ def train_gmm(sqlCtx, table_name, fields, min_occurrences=10, max_num_components
                                    % (','.join(fields), table_name, where_clause))
 
     model = tweets_w_geo.rdd.keyBy(lambda row: get_location_from_tweet(row))\
-                            .filter(lambda (location, row): location is not None)\
+                            .filter(lambda location_row: location_row[0] is not None)\
                             .flatMapValues(lambda row: tokenize_tweet(row, fields))\
-                            .map(lambda (location, word): (word, location))\
+                            .map(lambda location_word: (location_word[1], location_word[0]))\
                             .groupByKey()\
-                            .filter(lambda (word, locations): len(list(locations)) >= min_occurrences)\
+                            .filter(lambda word_locations: len(list(word_locations[1])) >= min_occurrences)\
                             .mapValues(lambda locations: fit_gmm_to_locations(locations, max_num_components))\
                             .collectAsMap()
 
@@ -367,7 +367,7 @@ def run_gmm_test(sc, sqlCtx, table_name, fields, model, where_clause=''):
 
     errors_rdd = tweets_w_geo.rdd.keyBy(lambda row: get_location_from_tweet(row))\
                                 .flatMapValues(lambda row: get_most_likely_point(tokenize_tweet(row, fields), model_bcast))\
-                                .map(lambda (true_geo_coord, est_loc): haversine(true_geo_coord, est_loc.geo_coord))
+                                .map(lambda true_geo_coord_est_loc: haversine(true_geo_coord_est_loc[0], true_geo_coord_est_loc[1].geo_coord))
 
     errors = np.array(errors_rdd.collect())
     num_vals = tweets_w_geo.count()
@@ -375,8 +375,8 @@ def run_gmm_test(sc, sqlCtx, table_name, fields, model, where_clause=''):
 
     median_error = np.median(errors)
     mean_error = np.mean(errors)
-    print('Median Error', median_error)
-    print('Mean Error: ', mean_error)
+    print(('Median Error', median_error))
+    print(('Mean Error: ', mean_error))
 
     # calculate coverage
     try:
@@ -429,7 +429,7 @@ def load_model(input_fname):
             weight = float(line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 2])
             weights.append(weight)
 
-            vals = map(float, line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 3: i*NUM_ITEMS_PER_COMPONENT + HEADER + 7])
+            vals = list(map(float, line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 3: i*NUM_ITEMS_PER_COMPONENT + HEADER + 7]))
             covar = np.array([vals[:2], vals[2:4]])
             covars.append(covar)
 
