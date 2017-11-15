@@ -1,6 +1,7 @@
 from gensim.models.word2vec import Word2Vec
 import pkg_resources
 import json
+from bson import json_util
 
 from smug.mongo_manager import MongoManager
 from smug.callback_helper import CallbackForward
@@ -33,7 +34,7 @@ class WordVectorProcessor:
 
 @CallbackForward("save")
 def callback(ch, method, properties, body):
-    message = json.loads(body)
+    message = json.loads(body, object_hook=json_util.object_hook)
     return word_vector_processor.score(message)
 
 
