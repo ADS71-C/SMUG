@@ -1,0 +1,151 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "smug_messages",
+  "type": "object",
+  "properties": {
+    "_id": {
+      "$id": "/properties/_id",
+      "type": "string",
+      "title": "An unique id of the message",
+      "description": "An unique id of the message",
+      "default": "",
+      "examples": [
+        "5a005064202d94a2c12d08d6"
+      ]
+    },
+    "metadata": {
+      "$id": "/properties/metadata",
+      "type": "object",
+      "properties": {
+        "date": {
+          "$id": "/properties/metadata/properties/date",
+          "type": "string",
+          "title": "The Date of the message.",
+          "description": "The date of the message in ISO8601 format",
+          "default": "",
+          "examples": [
+            "2017-01-02T23:56:52.226+0000"
+          ]
+        },
+        "url": {
+          "$id": "/properties/metadata/properties/url",
+          "type": "integer",
+          "title": "The Url of the message.",
+          "description": "An link to the url of the message.",
+          "default": 0,
+          "examples": [
+            8160556
+          ]
+        },
+        "type": {
+          "$id": "/properties/metadata/properties/type",
+          "type": "string",
+          "enum": [
+            "post",
+            "comment"
+          ],
+          "title": "The type of the message",
+          "description": "The type of the message, post or comment",
+          "default": "",
+          "examples": [
+            "post"
+          ]
+        },
+        "message_words": {
+          "$id": "/properties/metadata/properties/message_words",
+          "type": "array",
+          "items": {
+            "$id": "/properties/metadata/properties/message_words/items",
+            "type": "string",
+            "title": "The separate words in the message",
+            "description": "The separated words in the message",
+            "default": "",
+            "examples": [
+              "dat"
+            ]
+          }
+        }
+      },
+      "required": [
+        "type",
+        "message_words"
+      ]
+    },
+    "message": {
+      "$id": "/properties/message",
+      "type": "string",
+      "title": "The original text of the message",
+      "description": "The original text of the message",
+      "default": "",
+      "examples": [
+        "@vanessz_ dat zegt tim hofman altijd bij #boos haha"
+      ]
+    },
+    "author": {
+      "$id": "/properties/author",
+      "type": "string",
+      "title": "The author of the message",
+      "description": "The author of the message",
+      "default": "",
+      "examples": [
+        "wouter"
+      ]
+    },
+    "reports": {
+      "$id": "/properties/reports",
+      "type": "array",
+      "items": {
+        "$id": "/properties/reports/items",
+        "type": "object",
+        "properties": {
+          "id": {
+            "$id": "/properties/reports/items/properties/id",
+            "type": "string",
+            "title": "The id of the report that was generated.",
+            "description": "The id of the report that was generated. References smug_reports",
+            "default": "",
+            "examples": [
+              "5a004903202d94a2c12c6481"
+            ]
+          },
+          "score": {
+            "$id": "/properties/reports/items/properties/score",
+            "type": "number",
+            "title": "The Score that the report generated.",
+            "description": "The Score that the report generated.",
+            "default": 0.0,
+            "examples": [
+              0.33267027139663696
+            ]
+          },
+          "scored_words": {
+            "$id": "/properties/reports/items/properties/scored_words",
+            "type": "array",
+            "items": {
+              "$id": "/properties/reports/items/properties/scored_words/items",
+              "type": "string",
+              "title": "The words that where used to generate the report",
+              "description": "The words that where used to generate the report",
+              "default": "",
+              "examples": [
+                "dat"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "score"
+        ]
+      }
+    }
+  },
+  "required": [
+    "_id",
+    "metadata",
+    "message",
+    "author",
+    "reports"
+  ]
+}
