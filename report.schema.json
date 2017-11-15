@@ -1,0 +1,72 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "smug_reports",
+  "type": "object",
+  "properties": {
+    "_id": {
+      "$id": "/properties/_id",
+      "type": "string",
+      "title": "The _id of the object.",
+      "description": "Uniquely identify the report",
+      "default": "",
+      "examples": [
+        "5a004903202d94a2c12c6481"
+      ]
+    },
+    "name": {
+      "$id": "/properties/name",
+      "type": "string",
+      "title": "The Name of the report",
+      "description": "Describe the report, e.g. flu analysis",
+      "default": "",
+      "examples": [
+        "Word vectoring"
+      ]
+    },
+    "enabled": {
+      "$id": "/properties/enabled",
+      "type": "boolean",
+      "title": "If the report is enabled",
+      "description": "Check whether the report is enabled.",
+      "default": false,
+      "examples": [
+        true
+      ]
+    },
+    "type": {
+      "$id": "/properties/type",
+      "type": "string",
+      "enum": [
+        "wordvec",
+        "age"
+      ],
+      "title": "The type of the analysis",
+      "description": "What kind of analysis it is, e.g. wordvec or age",
+      "default": "",
+      "examples": [
+        "wordvec"
+      ]
+    },
+    "parameters": {
+      "$id": "/properties/parameters",
+      "type": "array",
+      "items": {
+        "$id": "/properties/parameters/items",
+        "type": "string",
+        "title": "The parameters of the analysis",
+        "description": "The parameters for the analysis, for example the words for the wordvec analysis",
+        "default": "",
+        "examples": [
+          "ziek"
+        ]
+      }
+    }
+  },
+  "required": [
+    "_id",
+    "name",
+    "enabled",
+    "parameters"
+  ]
+}
