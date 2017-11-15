@@ -2,10 +2,9 @@ from gensim.models.word2vec import Word2Vec
 import pkg_resources
 import json
 
-from mongo_manager import MongoManager
+from smug.mongo_manager import MongoManager
 from smug.callback_helper import CallbackForward
 from smug.connection_manager import ConnectionManager
-
 
 class WordVectorProcessor:
     def __init__(self):
@@ -13,7 +12,6 @@ class WordVectorProcessor:
         self.reports = [result for result in self.mongo_manager.get_reports()]
         model_location = pkg_resources.resource_filename('resources', 'word2vec.model')
         self.model = Word2Vec.load(model_location)
-
     def score(self, message):
         message['reports'] = []
         words = [word for word in message['metadata']['message_words'] if word in self.model.wv.vocab]
@@ -21,8 +19,10 @@ class WordVectorProcessor:
             score = 0
             if words:
                 score = self.model.wv.n_similarity(report['parameters'], words)
-            if message['metadata']['type'] == 'comment':
-                score /= 2
+                # Use inverted  function of the length to penalize shorter messages. Converges after roughly 5 words
+                score = ((-1 / (len(words) * 15 + 1)) + 1) * score
+        if message['metadata']['type'] == 'comment':
+            score /= 2
             message['reports'].append({
                 'id': str(report['_id']),
                 'score': score,
