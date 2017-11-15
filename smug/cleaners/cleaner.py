@@ -1,4 +1,5 @@
 import simplejson as json
+from bson import json_util
 
 from smug.callback_helper import CallbackForward
 from smug.connection_manager import ConnectionManager
@@ -16,7 +17,7 @@ def clean(message):
 
 @CallbackForward('preprocess')
 def callback(ch, method, properties, body):
-    message = json.loads(body)
+    message = json.loads(body, object_hook=json_util.object_hook)
     return clean(message)
 
 

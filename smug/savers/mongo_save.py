@@ -1,9 +1,9 @@
 import pkg_resources
-from pymongo import MongoClient, UpdateOne
+from pymongo import UpdateOne
 import os
 from dotenv import load_dotenv
-from time import time
 import simplejson as json
+from bson import json_util
 import threading
 
 from mongo_manager import MongoManager
@@ -36,7 +36,7 @@ class MongoSave():
         self.lock.acquire()
         watchdog.start()
         self.ch = ch
-        self.buffer[method.delivery_tag] = (json.loads(body))
+        self.buffer[method.delivery_tag] = (json.loads(body, object_hook=json_util.object_hook))
         # Refresh the watchdog
         self.lock.release()
         watchdog.refresh()
