@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 
-import pandas as pd
 import pkg_resources
 import gzip
 import json
@@ -15,16 +14,19 @@ class GzImporter:
     def __init__(self, connection_mananger):
         self.connection_manager = connection_mananger
 
-    def process_files(self, files):
+    def process_files(self, files, large_analyses=False):
         for file in files:
-            self.process_file(file)
+            self.process_file(file, large_analyses)
 
-    def process_file(self, file):
+    def process_file(self, file, large_analyses=False):
         filename = pkg_resources.resource_filename('resources', file)
 
         with gzip.open(filename, 'rt') as f:
             print('Sending {}'.format(file))
-            for content in f.readlines():
+            for index, content in enumerate(f.readlines()):
+                if large_analyses:
+                    if index % 10 != 0:
+                        continue
                 original_message = json.loads(content)
 
                 formatted_message = {
@@ -49,39 +51,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     files = args.files
 
-    base = '20170102-{}.out.gz'
-
-    files = [
-        base.format('00'),
-        base.format('01'),
-        base.format('02'),
-        base.format('03'),
-        base.format('04'),
-        base.format('05'),
-        base.format('06'),
-        base.format('07'),
-        base.format('08'),
-        base.format('09'),
-        base.format('10'),
-        base.format('11'),
-        base.format('12'),
-        base.format('13'),
-        base.format('14'),
-        base.format('15'),
-        base.format('16'),
-        base.format('17'),
-        base.format('18'),
-        base.format('19'),
-        base.format('20'),
-        base.format('21'),
-        base.format('22'),
-        base.format('23')
-    ]
-
-    if files is None:
-        files = input('Please provide a csv file for processing').split(',')
+    files = [resource for resource in pkg_resources.resource_listdir('resources', '') if ".gz" in resource]
 
     connection_manager = ConnectionManager()
     csv_importer = GzImporter(connection_manager)
-    csv_importer.process_files(files=files)
+    csv_importer.process_files(files=files, large_analyses=True)
     exit(0)
