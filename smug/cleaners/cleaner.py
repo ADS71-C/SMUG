@@ -7,6 +7,10 @@ from smug.connection_manager import ConnectionManager
 def clean(message):
     if message['message'] is None:
         message['message'] = ''
+
+    if 'metadata' not in message:
+        return None  # no metadata provided! Should not happen
+
     if 'rt' in message['message'].lower():
         return None
     if 'http' in message['message']:

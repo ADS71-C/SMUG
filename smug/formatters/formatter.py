@@ -12,6 +12,8 @@ def format_message(original_message):
             'date': original_message['datum'],
             'url': original_message['url'],
             'type': original_message['type'],
+            'source': 'twitter',
+            'source_import': 'coosto'
         }
     }
 

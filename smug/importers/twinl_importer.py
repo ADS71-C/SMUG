@@ -31,6 +31,8 @@ class GzImporter:
                         'date': str(original_message['timestamp_ms']),
                         'url': original_message['id'],
                         'type': 'post',
+                        'source': 'twitter',
+                        'source_import': 'twinl'
                     }
                 }
                 self.connection_manager.publish_to_queue('clean', json.dumps(formatted_message))

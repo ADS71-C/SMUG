@@ -65,11 +65,34 @@
               "dat"
             ]
           }
-        }
+        },
+        "source": {
+          "$id": "/properties/metadata/properties/source",
+          "type": "string",
+          "title": "The source of a message",
+          "description": "Where a message came from. E.g. twitter",
+          "default": "",
+          "examples": [
+            "twitter"
+          ]
+        },
+        "source_import": {
+          "$id": "/properties/metadata/properties/source_import",
+          "type": "string",
+          "title": "The source data-set of a message",
+          "description": "From which data-set the message came from, e.g. twinl of coosto",
+          "default": "",
+          "examples": [
+            "twinl",
+            "coosto"
+          ]
+        },
       },
       "required": [
         "type",
-        "message_words"
+        "message_words",
+        "source",
+        "source_import"
       ]
     },
     "message": {
