@@ -4,7 +4,8 @@ import hashlib
 
 class PandasImporter:
     dtypes = {
-        '72197921735611c48d8114efb03740ce': 'formatter.coosto'
+        '72197921735611c48d8114efb03740ce': 'formatter.coosto',
+        '52cb34ef57fcb0367ae922ce156dc04c': 'formatter.twinl'
     }
 
     def __init__(self, connection_mananger):
