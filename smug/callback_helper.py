@@ -1,6 +1,7 @@
 import simplejson as json
 from functools import wraps
 from smug.connection_manager import ConnectionManager
+from bson import json_util
 
 
 class CallbackForward:
@@ -18,7 +19,7 @@ class CallbackForward:
             result = func(channel, method, properties, body)
 
             if result is not None and outer_self.forward_channel is not None:
-                message = json.dumps(result)
+                message = json.dumps(result, default=json_util.default)
                 channel.basic_publish(exchange='', routing_key=outer_self.forward_channel, body=message)
 
             channel.basic_ack(delivery_tag=method.delivery_tag)
