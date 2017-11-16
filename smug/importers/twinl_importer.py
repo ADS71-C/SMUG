@@ -35,6 +35,8 @@ class GzImporter:
                         'date': datetime.fromtimestamp(int(original_message['timestamp_ms']) / 1000),
                         'url': original_message['id'],
                         'type': 'post',
+                        'source': 'twitter',
+                        'source_import': 'twinl'
                     }
                 }
                 self.connection_manager.publish_to_queue('clean',
