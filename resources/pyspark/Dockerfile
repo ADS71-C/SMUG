@@ -1,18 +1,17 @@
-FROM ubuntu:16.04
+FROM frolvlad/alpine-oraclejdk8:8.151.12-cleaned
 
-# See https://github.com/phusion/baseimage-docker/issues/58
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-
-RUN apt-get update -y \
-    && apt-get install -y wget python-dev openjdk-8-jre-headless python-pip nano\
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --update \
+    wget \
+    python \
+    python-dev \
+    py-pip \
+    nano \
+    bash
 
 RUN pip install pymongo
 
-RUN useradd --create-home --shell /bin/bash ubuntu
-
-ENV HOME /home/ubuntu
+ENV LANG=C.UTF-8
+ENV HOME /opt
 ENV SPARK_VERSION 2.2.0
 ENV HADOOP_VERSION 2.7
 ENV MONGO_SPARK_VERSION 2.2.0
@@ -23,8 +22,6 @@ WORKDIR ${HOME}
 ENV SPARK_HOME ${HOME}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}
 
 ENV PATH $PATH:${SPARK_HOME}/bin
-
-USER ubuntu
 
 # Get Spark
 RUN wget http://ftp.tudelft.nl/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
