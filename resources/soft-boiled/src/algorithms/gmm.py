@@ -325,18 +325,10 @@ def train_gmm(sqlCtx, table_name, fields, min_occurrences=10, max_num_components
                             .groupByKey()\
                             .filter(lambda word_locations: len(list(word_locations[1])) >= min_occurrences)\
                             .mapValues(lambda locations: fit_gmm_to_locations(locations, max_num_components))\
+                            .filter(lambda gmm_error: gmm_error[0] is not None)\
                             .collectAsMap()
 
-    # TODO: Add filter of infrequent words before move to the local context
-    # Clean out words that occur less than a threshold number of times
-    words_to_delete = []
-    for word in model:
-        (gmm, error) = model[word]
-        if gmm is None:
-            words_to_delete.append(word)
 
-    for word in words_to_delete:
-        del model[word]
     return model
 
 

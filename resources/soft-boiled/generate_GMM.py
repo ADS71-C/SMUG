@@ -1,7 +1,7 @@
 import os
 import findspark
 
-findspark.init('C:\spark-2.2.0-bin-hadoop2.7\spark-2.2.0-bin-hadoop2.7')
+findspark.init()
 findspark.find()
 
 from pyspark.sql import SparkSession
@@ -12,13 +12,13 @@ spark = SparkSession \
     .getOrCreate()
 
 sc = spark.sparkContext
-sc.addPyFile(r'C:\Users\mike_\Documents\School\Proftaak\soft-boiled.zip')
+sc.addPyFile('../soft-boiled.zip')
 from src.algorithms import gmm
 
 tweets_df = None
-for filename in os.listdir('dataset'):
+for filename in os.listdir('train_dataset_small'):
     print(filename)
-    chunk = spark.read.json('dataset/' + filename)
+    chunk = spark.read.json('train_dataset_small/' + filename)
     chunk = chunk.filter('geo is not null')
     chunk = chunk.filter('place is not null')
     chunk = chunk.select(['user', 'text', 'geo', 'place', 'entities.urls', 'extended_entities.media'])
