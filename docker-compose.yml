@@ -44,6 +44,8 @@ services:
       - mongodb
     networks:
       - connector
+    volumes:
+      - ./resources/docker/mongodb:/data/db
 
 networks:
   connector:

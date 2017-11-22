@@ -1,15 +1,13 @@
 from argparse import ArgumentParser
 import pandas as pd
 import pkg_resources
-from time import sleep
 
 from smug.connection_manager import ConnectionManager
 
+from smug.importers.pandas_importer import PandasImporter
 
-class CsvImporter:
-    def __init__(self, connection_mananger):
-        self.connection_manager = connection_mananger
 
+class CsvImporter(PandasImporter):
     def process_files(self, files):
         for file in files:
             self.process_file(file)
@@ -19,8 +17,8 @@ class CsvImporter:
         print('Sending {}'.format(file))
         df = pd.read_csv(filename, sep=';')
         df = df.drop_duplicates(subset='url', keep='first')
-        for inex, row in df.iterrows():
-            connection_manager.publish('formatting', row.to_json())
+
+        self.process_dataframe(df)
 
 
 if __name__ == '__main__':

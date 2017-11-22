@@ -5,11 +5,11 @@ import pkg_resources
 from dotenv import load_dotenv
 
 queues = {
-    'formatting': os.environ.get("FORMATTING_QUEUE_NAME", "formatting"),
-    'cleaning': os.environ.get("CLEANING_QUEUE_NAME", "cleaning"),
-    'preprocessing': os.environ.get("PREPROCESSING_QUEUE_NAME", "preprocessing"),
-    'processing': os.environ.get("PROCESSING", "processing"),
-    'save': os.environ.get("SAVE_QUEUE_NAME", "save"),
+    'format': os.environ.get("FORMATTING_QUEUE_NAME", "1_format"),
+    'clean': os.environ.get("CLEANING_QUEUE_NAME", "2_clean"),
+    'preprocess': os.environ.get("PREPROCESSING_QUEUE_NAME", "3_preprocess"),
+    'process': os.environ.get("PROCESSING", "4_process"),
+    'save': os.environ.get("SAVE_QUEUE_NAME", "5_save"),
 
 }
 
@@ -29,15 +29,27 @@ class ConnectionManager:
         self.channel = self.connection.channel()
         self.prefetch_count = int(os.environ.get("PREFETCH_COUNT", 500))
 
-    def publish(self, channel_type, message):
-        channel_name = self.get_queue_name(channel_type)
-
+    def publish_to_queue(self, queue_type, message):
+        channel_name = self.get_queue_name(queue_type)
         self.channel.basic_publish(exchange='', routing_key=channel_name, body=message)
 
-    def subscribe(self, channel_name, callback):
+    def publish_to_exchange(self, routing_key, message, exchange='amq.direct'):
+        self.channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
+
+    def _subscribe(self, queue_name, callback):
         self.channel.basic_qos(prefetch_count=self.prefetch_count)
-        self.channel.basic_consume(callback, self.get_queue_name(channel_name))
+        self.channel.basic_consume(callback, queue_name)
         self.channel.start_consuming()
+
+    def subscribe_to_queue(self, queue_name, callback):
+        queue_name = self.get_queue_name(queue_name)
+        self._subscribe(queue_name, callback)
+
+    def subscribe_to_routing_key(self, routing_key, callback):
+        result = self.channel.queue_declare(exclusive=True)
+        queue_name = result.method.queue
+        self.channel.queue_bind(queue_name, 'amq.direct', routing_key=routing_key)
+        self._subscribe(queue_name, callback)
 
     @staticmethod
     def get_queue_name(channel_type):

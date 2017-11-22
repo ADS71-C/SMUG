@@ -1,42 +1,44 @@
 from gensim.models.word2vec import Word2Vec
 import pkg_resources
 import json
+from bson import json_util
 
-from smug.callback_helper import CallbackHelper
+from mongo_manager import MongoManager
+from smug.callback_helper import CallbackForward
 from smug.connection_manager import ConnectionManager
 
 
-def score(message):
-    words = [word for word in message['metadata']['message_words'] if word in model.wv.vocab]
-    score = 0
-    if words:
-        score = model.wv.n_similarity(sickness_terms, words)
-    if message['metadata']['type'] == 'comment':
-        score /= 2
-    message['analytics'] = {
-        'sickness_score': score,
-        'scored_words': words
-    }
-    return message
+class WordVectorProcessor:
+    def __init__(self):
+        self.mongo_manager = MongoManager()
+        self.reports = [result for result in self.mongo_manager.get_reports()]
+        model_location = pkg_resources.resource_filename('resources', 'word2vec.model')
+        self.model = Word2Vec.load(model_location)
+
+    def score(self, message):
+        message['reports'] = []
+        words = [word for word in message['metadata']['message_words'] if word in self.model.wv.vocab]
+        for report in self.reports:
+            score = 0
+            if words:
+                score = self.model.wv.n_similarity(report['parameters'], words)
+            if message['metadata']['type'] == 'comment':
+                score /= 2
+            message['reports'].append({
+                'id': str(report['_id']),
+                'score': score,
+                'scored_words': words
+            })
+        return message
 
 
+@CallbackForward("save")
 def callback(ch, method, properties, body):
-    message = json.loads(body)
-    return score(message)
+    message = json.loads(body, object_hook=json_util.object_hook)
+    return word_vector_processor.score(message)
 
 
 if __name__ == '__main__':
-    sickness_terms = [
-        'ziek',
-        'griep',
-        'verkouden',
-        'verkoudheid',
-        'koorts',
-        'hoofdpijn',
-    ]
-
-    model_location = pkg_resources.resource_filename('resources', 'word2vec.model')
-    model = Word2Vec.load(model_location)
+    word_vector_processor = WordVectorProcessor()
     connection_manager = ConnectionManager()
-    callback_helper = CallbackHelper(callback=callback, forward_channel_type='save')
-    connection_manager.subscribe('processing', callback_helper.wrapped_callback)
+    connection_manager.subscribe_to_queue('process', callback)

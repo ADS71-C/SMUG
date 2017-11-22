@@ -1,11 +1,12 @@
 import pkg_resources
-from pymongo import MongoClient, UpdateOne
+from pymongo import UpdateOne
 import os
 from dotenv import load_dotenv
-from time import time
 import simplejson as json
+from bson import json_util
 import threading
 
+from mongo_manager import MongoManager
 from smug.connection_manager import ConnectionManager
 
 
@@ -14,24 +15,30 @@ class MongoSave():
         self.buffer = {}
         self.write_buffer_size = write_buffer_size
         self.ch = None
+        self.mongo_manager = MongoManager()
+        self.lock = threading.RLock()
 
     def save(self):
+        self.lock.acquire()
         if len(self.buffer) > 0:
             requests = [UpdateOne({'metadata.url': value['metadata']['url']}, {'$set': value}, upsert=True)
                         for value in self.buffer.values()]
-            collection.bulk_write(requests)
+            self.mongo_manager.message_collection.bulk_write(requests)
 
             for delivery_tag in self.buffer:
                 # Ack to the MQ
                 self.ch.basic_ack(delivery_tag=delivery_tag)
             self.buffer.clear()
+        self.lock.release()
 
     def callback(self, ch, method, properties, body):
         # The watchdog will only start if it has not been started already
+        self.lock.acquire()
         watchdog.start()
         self.ch = ch
-        self.buffer[method.delivery_tag] = (json.loads(body))
+        self.buffer[method.delivery_tag] = (json.loads(body, object_hook=json_util.object_hook))
         # Refresh the watchdog
+        self.lock.release()
         watchdog.refresh()
 
         # Writes to the database if the buffer is the correct length
@@ -68,17 +75,15 @@ class MongoSaveWatchdog:
 if __name__ == '__main__':
     env_location = pkg_resources.resource_filename('resources', '.env')
     load_dotenv(env_location)
-    mongourl = os.environ.get("MONGODBURL", "localhost")
-    write_buffer_size = int(os.environ.get("MONGO_WRITE_BUFFER", 100))
+    mongouri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/smug")
+    mongodb = os.environ.get("MONGODB_DATABASE", "smug")
+    write_buffer_size = int(os.environ.get("MONGODB_WRITE_BUFFER", 100))
     prefetch_count = int(os.environ.get("PREFETCH_COUNT", 500))
 
     if write_buffer_size > prefetch_count:
         raise ValueError('MongoDB write buffer should not exceed prefetch count. This will cause the')
-    client = MongoClient(mongourl, 27017)
-    db = client['smug']
-    collection = db['smug']
 
     mongo_save = MongoSave(write_buffer_size=write_buffer_size)
     watchdog = MongoSaveWatchdog(callback=mongo_save.save, threshold=1)
     connection_manager = ConnectionManager()
-    connection_manager.subscribe('save', mongo_save.callback)
+    connection_manager.subscribe_to_queue('save', mongo_save.callback)
