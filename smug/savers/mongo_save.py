@@ -21,7 +21,14 @@ class MongoSave():
     def save(self):
         self.lock.acquire()
         if len(self.buffer) > 0:
-            requests = [UpdateOne({'metadata.url': value['metadata']['url']}, {'$set': value}, upsert=True)
+            requests = [UpdateOne({'metadata.url': value['metadata']['url']},
+                                  {'$setOnInsert': {
+                                      'metadata': value['metadata'],
+                                      'author': value['author'],
+                                      'message': value['message']
+                                  },
+                                   '$addToSet': {'reports': {"$each": value['reports']}}},
+                                  upsert=True)
                         for value in self.buffer.values()]
             self.mongo_manager.message_collection.bulk_write(requests)
 
