@@ -53,29 +53,25 @@ def tokenize_tweet(inputRow, fields):
     if 'text' in fields:
         text.append(inputRow.text.strip())
     if 'user.location' in fields:
-        try:
-            text.append(inputRow.location.strip())
-        except:
-            text.append(inputRow.user.location.strip())
-    text = ' '.join(text)
-
-    if 'text' in fields:
-        # Clean up URLs in tweet
-        updates_to_make = []
-        if inputRow.entities and inputRow.entities.urls:
-            for url_row in inputRow.entities.urls:
-                updates_to_make.append((url_row.url, urllib.parse.urlparse(url_row.expanded_url).netloc.replace('.', '_')))
-        if inputRow.extended_entities and inputRow.extended_entities.media:
-            for media_row in inputRow.extended_entities.media:
-                updates_to_make.append((media_row.url, urllib.parse.urlparse(media_row.expanded_url).netloc.replace('.', '_')))
-        for (original, new_string) in updates_to_make:
-            text = text.replace(original, new_string)
+        if inputRow.location is not None:
+            try:
+                text.append(inputRow.location.strip())
+            except:
+                if inputRow.user.location is not None:
+                    text.append(inputRow.user.location.strip())
+        text = ' '.join(text)
 
     # Convert to lowercase and get remove @mentions
     tokens = []
+
+    import string
+    remove_punctuation = str.maketrans('', '', string.punctuation)
     for item in text.lower().split():
         if not item.startswith('@'):
-            tokens.append(item)
+            filtered_item = item.translate(remove_punctuation)
+            if filtered_item:
+                tokens.append(filtered_item)
+
     return tokens
 
 
@@ -84,7 +80,7 @@ def get_errors(model, points):
     Computes the median error for a GMM model and a set of training points
 
     Args:
-        model (mixture.GMM): A GMM model for a word
+        model (mixture.GaussianMixture): A GMM model for a word
         points (list): A list of (lat, lon) tuples
 
     Returns:
@@ -110,7 +106,7 @@ def fit_gmm_to_locations(geo_coords, max_num_components):
         max_num_components (int): The maximum number of components that the GMM model can have
 
     Returns:
-        gmm_estimate (tuple): Tuple containing the best mixture.GMM and the error of that model on the training data
+        gmm_estimate (tuple): Tuple containing the best mixture.GaussianMixture and the error of that model on the training data
     """
     # GMM Code expects numpy arrays not named tuples
     data_array = []
@@ -123,7 +119,7 @@ def fit_gmm_to_locations(geo_coords, max_num_components):
     min_bic_seen = 10000000
     best_model = None
     for i in range(min_components, max_components+1):
-        model = mixture.GMM(n_components=i, covariance_type='full', min_covar=0.001).fit(data_array)
+        model = mixture.GaussianMixture(n_components=i, covariance_type='full').fit(data_array)
         models.append(model)
         bic = model.bic(np.array(data_array))
         if bic < min_bic_seen:
@@ -139,16 +135,16 @@ def combine_gmms(gmms):
     Takes an array of gaussian mixture models and produces a GMM that is the weighted sum of the models
 
     Args:
-        gmms (list): A list of (mixture.GMM, median_error_on_training) models
+        gmms (list): A list of (mixture.GaussianMixture, median_error_on_training) models
 
     Returns:
-        new_gmm (mixture.GMM): A single GMM model that is the weighted sum of the input gmm models
+        new_gmm (mixture.GaussianMixture): A single GMM model that is the weighted sum of the input gmm models
     """
     n_components = sum([g[0].n_components for g in gmms])
     covariance_type = gmms[0][0].covariance_type
-    new_gmm = mixture.GMM(n_components=n_components, covariance_type=covariance_type)
+    new_gmm = mixture.GaussianMixture(n_components=n_components, covariance_type=covariance_type)
     new_gmm.means_ = np.concatenate([g[0].means_ for g in gmms])
-    new_gmm.covars_ = np.concatenate([g[0].covars_ for g in gmms])
+    new_gmm.covariances_ = np.concatenate([g[0].covariances_ for g in gmms])
     weights = np.concatenate([g[0].weights_ * ((1/max(g[1],1))**4) for g in gmms])
     new_gmm.weights_ = weights / np.sum(weights) # Normalize weights
     new_gmm.converged_ = True
@@ -168,12 +164,12 @@ def get_most_likely_point(tokens, model_bcast, radius=None):
     Returns:
         loc_estimate (list): A list with 0 or 1 GMMLocEstimates
     '''
-    model = model_bcast.value
+    model = model_bcast.value # dict  {key:(gmm_model, error)...}
     models = []
+
     for token in tokens:
         if token in model:
             models.append(model[token])
-
     if len(models) > 1:
         combined_gmm = combine_gmms(models)
         (best_lat, best_lon) = combined_gmm.means_[np.argmax(combined_gmm.weights_)]
@@ -198,7 +194,7 @@ def predict_probability_area(model, upper_bound, lower_bound):
     Predict the probability that the true location is within a specified bounding box given a GMM model
 
     Args:
-        model (mixture.GMM): GMM model to use
+        model (mixture.GaussianMixture): GMM model to use
         upper_bound (list): [upper lat, right lon] of bounding box
         lower_bound (list): [lower_lat, left_lon] of bounding box
 
@@ -207,7 +203,7 @@ def predict_probability_area(model, upper_bound, lower_bound):
     """
     total_prob = 0
     for i in range(0, len(model.weights_)):
-        val = ext.mvnormcdf(upper_bound, model.means_[i], model.covars_[i], lower_bound, maxpts=2000)
+        val = ext.mvnormcdf(upper_bound, model.means_[i], model.covariances_[i], lower_bound, maxpts=2000)
         # below is necessary as a very rare occurance causes some guassians to have a result of nan
         #(likely exeedingly low probability)
         if math.isnan(val):
@@ -224,7 +220,7 @@ def predict_probability_radius(gmm_model, radius, center_point):
     Estimate is based on estimating probability in corners of bounding box and subtracting from total probability mass
 
     Args:
-        gmm_model (mixture.GMM): GMM model to use
+        gmm_model (mixture.GaussianMixture): GMM model to use
         radius (float): Radius from center point to include in estimate
         center_point (tuple): (lat, lon) center point
 
@@ -274,7 +270,7 @@ def predict_user_gmm(sc, tweets_to_predict, fields, model, radius=None, predict_
         sc (pyspark.SparkContext): Spark Context to use for execution
         tweets_to_predict (RDD): RDD of twitter Row objects
         fields (list): List of field names to extract and then use for GMM prediction
-        model (dict): Dictionary of {word:(mixture.GMM, error)}
+        model (dict): Dictionary of {word:(mixture.GaussianMixture, error)}
         radius (float): Distance from most likely point at which we should estimate containment probability (if not None)
         predict_lower_bound (float): Probability hreshold below which we should filter tweets
         num_partitions (int): Number of partitions. Should be based on size of the data
@@ -315,10 +311,10 @@ def train_gmm(sqlCtx, table_name, fields, min_occurrences=10, max_num_components
         where_clause (str): A where clause that can be applied to the query
 
     Returns:
-        model (dict): Dictionary of {word:(mixture.GMM, error)}
+        model (dict): Dictionary of {word:(mixture.GaussianMixture, error)}
     """
 
-    tweets_w_geo = sqlCtx.sql('select geo, place, entities,  extended_entities, %s from %s where (geo.coordinates is not null \
+    tweets_w_geo = sqlCtx.sql('select geo, place, urls,  media, %s from %s where (geo.coordinates is not null \
                                     or (place is not null and place.bounding_box.type="Polygon")) %s'
                                    % (','.join(fields), table_name, where_clause))
 
@@ -353,13 +349,13 @@ def run_gmm_test(sc, sqlCtx, table_name, fields, model, where_clause=''):
         sqlCtx (pyspark.sql.SQLContext): Spark SQL Context to use for sql queries
         table_name (str): Table name to query for test data
         fields (list): List of field names to extract and then use for GMM prediction
-        model (dict): Dictionary of {word:(mixture.GMM, error)}
+        model (dict): Dictionary of {word:(mixture.GaussianMixture, error)}
         where_clause (str): A where clause that can be applied to the query
 
     Returns:
         final_result (dict): A description of the performance of the GMM Algorithm
     """
-    tweets_w_geo = sqlCtx.sql('select geo, entities,  extended_entities, %s from %s where geo.coordinates is not null %s'
+    tweets_w_geo = sqlCtx.sql('select geo, urls,  media, %s from %s where geo.coordinates is not null %s'
                                    % (','.join(fields), table_name, where_clause))
 
     # for each tweet calculate most likely position
@@ -390,7 +386,6 @@ def run_gmm_test(sc, sqlCtx, table_name, fields, model, where_clause=''):
     return final_results
 
 
-
 def load_model(input_fname):
     """
     Load a pre-trained model
@@ -399,46 +394,43 @@ def load_model(input_fname):
         input_fname (str): Local file path to read GMM model from
 
     Returns:
-        model (dict): A dictionary of the form {word: (mixture.GMM, error)}
+        model (dict): A dictionary of the form {word: (mixture.GaussianMixture, error)}
     """
     model = {}
-    if input_fname.endswith('.gz'):
-        input_file = gzip.open(input_fname, 'rb')
-    else:
-        input_file = open(input_fname, 'rb')
-    csv_reader = csv.reader(input_file)
+    with open(input_fname, 'r', encoding='utf-8') as csvfile:
+        csv_reader = csv.reader(csvfile, delimiter=',')
+        for line in csv_reader:
+            if line:
+                word = line[0]
+                error = float(line[1])
+                n_components = int(line[2])
+                covariance_type = line[3]
+                if covariance_type != 'full':
+                    raise NotImplementedError('Only full covariance matricies supported')
 
-    for line in csv_reader:
-        word = line[0].decode('utf-8')
-        error = float(line[1])
-        n_components = int(line[2])
-        covariance_type = line[3]
-        if covariance_type != 'full':
-            raise NotImplementedError('Only full covariance matricies supported')
+                HEADER = 4
+                NUM_ITEMS_PER_COMPONENT= 7
+                means = []
+                covars = []
+                weights = []
+                for i in range(n_components):
+                    lat = float(line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 0])
+                    lon = float(line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 1])
+                    mean = [lat, lon]
+                    means.append(mean)
+                    weight = float(line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 2])
+                    weights.append(weight)
 
-        HEADER = 4
-        NUM_ITEMS_PER_COMPONENT= 7
-        means = []
-        covars = []
-        weights = []
-        for i in range(n_components):
-            lat = float(line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 0])
-            lon = float(line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 1])
-            mean = [lat, lon]
-            means.append(mean)
-            weight = float(line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 2])
-            weights.append(weight)
+                    vals = list(map(float, line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 3: i*NUM_ITEMS_PER_COMPONENT + HEADER + 7]))
+                    covar = np.array([vals[:2], vals[2:4]])
+                    covars.append(covar)
 
-            vals = list(map(float, line[i*NUM_ITEMS_PER_COMPONENT + HEADER + 3: i*NUM_ITEMS_PER_COMPONENT + HEADER + 7]))
-            covar = np.array([vals[:2], vals[2:4]])
-            covars.append(covar)
-
-        new_gmm = mixture.GMM(n_components=n_components, covariance_type=covariance_type)
-        new_gmm.covars_ = np.array(covars)
-        new_gmm.means_ = np.array(means)
-        new_gmm.weights_ = np.array(weights)
-        new_gmm.converged_ = True
-        model[word] = (new_gmm, error)
+                new_gmm = mixture.GaussianMixture(n_components=n_components, covariance_type=covariance_type)
+                new_gmm.covariances_ = np.array(covars)
+                new_gmm.means_ = np.array(means)
+                new_gmm.weights_ = np.array(weights)
+                new_gmm.converged_ = True
+                model[word] = (new_gmm, error)
 
     return model
 
@@ -448,20 +440,17 @@ def save_model(model, output_fname):
     Save the current model for future use
 
     Args:
-        model (dict): A dictionary of the form {word: (mixture.GMM, error)}
+        model (dict): A dictionary of the form {word: (mixture.GaussianMixture, error)}
         output_fname (str): Local file path to store GMM model
     """
-    if output_fname.endswith('.gz'):
-        output_file = gzip.open(output_fname, 'w')
-    else:
-        output_file = open(output_fname, 'w')
+    output_file = open(output_fname, 'w', encoding='utf-8')
     csv_writer = csv.writer(output_file)
     LAT = 0
     LON = 1
     for word in model:
         (gmm, error) = model[word]
-        row = [word.encode('utf-8'), error, gmm.n_components, gmm.covariance_type]
-        for mean, weight, covar in zip(gmm.means_, gmm.weights_, gmm.covars_):
+        row = [word, error, gmm.n_components, gmm.covariance_type]
+        for mean, weight, covar in zip(gmm.means_, gmm.weights_, gmm.covariances_):
             row.extend([mean[LAT], mean[LON], weight, covar[0][0], covar[0][1], covar[1][0], covar[1][1]])
         csv_writer.writerow(row)
     output_file.close()
