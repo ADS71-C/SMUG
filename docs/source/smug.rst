@@ -1,4 +1,4 @@
-smug package
+SMUG package
 ============
 
 Subpackages
