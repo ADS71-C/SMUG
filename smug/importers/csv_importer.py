@@ -1,9 +1,9 @@
 from argparse import ArgumentParser
+
 import pandas as pd
 import pkg_resources
 
 from smug.connection_manager import ConnectionManager
-
 from smug.importers.pandas_importer import PandasImporter
 
 
@@ -11,7 +11,7 @@ class CsvImporter(PandasImporter):
     def process_files(self, files):
         """
         Processes a list of files individually
-        
+
         :param files: array of files
         :return: None
         """

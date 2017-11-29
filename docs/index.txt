@@ -9,8 +9,8 @@ Welcome to SMUG's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-	readme
 
+.. include:: ../readme.md
 
 Indices and tables
 ==================
