@@ -2,9 +2,11 @@ import pkg_resources
 import json
 from bson import json_util
 
-from mongo_manager import MongoManager
+from smug.mongo_manager import MongoManager
 from smug.callback_helper import CallbackForward
 from smug.connection_manager import ConnectionManager
+
+from textblob import TextBlob
 
 
 class NlpProcessor:
@@ -14,9 +16,17 @@ class NlpProcessor:
 
     def score(self, message):
         message['reports'] = []
+        tb = TextBlob(message['message'])
         for report in self.reports:
+            result = {}
+            if report['mode'] == 'sentiment':
+                sentiment = tb.sentiment
+                result['polarity'] = sentiment.polarity
+                result['subjectivity'] = sentiment.subjectivity
+
             message['reports'].append({
                 'id': str(report['_id']),
+                **report
             })
         return message
 
