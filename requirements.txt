@@ -32,4 +32,5 @@ Sphinx==1.6.5
 sphinxcontrib-websupport==1.0.1
 urllib3==1.22
 sphinxcontrib-blockdiag==1.5.5
+sphinx_rtd_theme==0.2.5b1
 textblob >= 0.14.0

@@ -9,7 +9,6 @@ Welcome to SMUG's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
 .. include:: ../readme.md
    queues
 
