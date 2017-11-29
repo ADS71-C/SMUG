@@ -1,3 +1,6 @@
+# models
+
+*.model*
 # Created by .ignore support plugin (hsz.mobi)
 
 resources/docker/*
