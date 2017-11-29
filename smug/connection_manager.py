@@ -1,6 +1,7 @@
 import pika
 from pika.credentials import PlainCredentials
 import os
+import json
 import pkg_resources
 from dotenv import load_dotenv
 
@@ -8,9 +9,17 @@ queues = {
     'format': os.environ.get("FORMATTING_QUEUE_NAME", "1_format"),
     'clean': os.environ.get("CLEANING_QUEUE_NAME", "2_clean"),
     'preprocess': os.environ.get("PREPROCESSING_QUEUE_NAME", "3_preprocess"),
-    'process': os.environ.get("PROCESSING", "4_process"),
+    'process_wordvec': json.loads(os.environ.get("PROCESSING_QUEUE_WORDVEC_NAME",
+                                                 '{"name":"4_process_wordvec","exchange":"4_process"}')),
+    'process_location': json.loads(os.environ.get("PROCESSING_QUEUE_LOCATION_NAME",
+                                                  '{"name":"4_process_location","exchange":"4_process"}')),
+    'process_nlp': json.loads(os.environ.get("PROCESSING_QUEUE_NLP_NAME",
+                                             '{"name":"4_process_nlp","exchange":"4_process"}')),
     'save': os.environ.get("SAVE_QUEUE_NAME", "5_save"),
+}
 
+exchanges = {
+    'process': {'name': os.environ.get('PROCESSING_EXCHANGE_NAME', '4_process'), 'type': 'fanout'}
 }
 
 
@@ -53,8 +62,21 @@ class ConnectionManager:
 
     @staticmethod
     def get_queue_name(channel_type):
-        return queues[channel_type]
+        queue = queues[channel_type]
+        return queue['name'] if isinstance(queue, dict) else queue
+
+    @staticmethod
+    def get_queues():
+        return queues
+
+    @staticmethod
+    def get_exchanges():
+        return exchanges
 
     @staticmethod
     def get_queue_names():
         return queues.values()
+
+    @staticmethod
+    def get_exchange_name(exchange_type):
+        return exchanges[exchange_type]['name']

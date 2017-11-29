@@ -2,7 +2,7 @@ import re
 import simplejson as json
 from bson import json_util
 
-from smug.callback_helper import CallbackForward
+from smug.callback_helper import CallbackExchangeForward
 from smug.connection_manager import ConnectionManager
 
 
@@ -13,7 +13,7 @@ def split_words(message):
     return message
 
 
-@CallbackForward('process')
+@CallbackExchangeForward('process')
 def callback(ch, method, properties, body):
     message = json.loads(body, object_hook=json_util.object_hook)
     return split_words(message)

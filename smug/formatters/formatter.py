@@ -21,7 +21,7 @@ def format_message(original_message):
     return formatted_message
 
 
-@CallbackForward('cleaning')
+@CallbackForward('clean')
 def callback(ch, method, properties, body):
     message = json.loads(body, object_hook=json_util.object_hook)
     return format_message(message)
