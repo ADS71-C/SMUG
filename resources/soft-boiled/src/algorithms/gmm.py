@@ -67,7 +67,7 @@ def tokenize_tweet(inputRow, fields, stopwords):
     for item in text.lower().split():
         if not item.startswith('@'):
             filtered_item = item.translate(remove_punctuation)
-            if filtered_item and filtered_item in stopwords:
+            if filtered_item and filtered_item not in stopwords:
                 tokens.append(filtered_item)
 
     return tokens
@@ -316,7 +316,7 @@ def train_gmm(sqlCtx, table_name, fields, min_occurrences=10, max_num_components
                                    % (','.join(fields), table_name, where_clause))
 
     line = open('src/stopwords/stopwords-nl.txt', 'r', encoding='utf-8')
-    stopwords = [word[1:-1] for word in line.readline().split(',')]
+    stopwords = {word[1:-1] for word in line.readline().split(',')}
 
     model = tweets_w_geo.rdd.keyBy(lambda row: get_location_from_tweet(row))\
                             .filter(lambda location_row: location_row[0] is not None)\
