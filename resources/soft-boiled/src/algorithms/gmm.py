@@ -1,11 +1,10 @@
 from sklearn import mixture
 import numpy as np
-import urllib.parse
 # local includes
 from src.utils.geo import bb_center, GeoCoord, haversine
 import statsmodels.sandbox.distributions.extras as ext
 import math
-import gzip
+import string
 import csv
 import itertools
 from collections import namedtuple, defaultdict
@@ -37,14 +36,14 @@ def get_location_from_tweet(row):
     return location
 
 
-def tokenize_tweet(inputRow, fields):
+def tokenize_tweet(inputRow, fields, stopwords):
     """
     A simple tokenizer that takes a tweet as input and, splitting on whitespace, and returns words in the tweet
 
     Args:
-      inputRow (Row): A spark sql row containing a tweet
-      fields (list): A list of field names which directs tokenize on which fields to use as source data
-
+        inputRow (Row): A spark sql row containing a tweet
+        fields (list): A list of field names which directs tokenize on which fields to use as source data
+        stopwords (list): A list with stopwords.
     Returns:
         tokens (list): A list of words appearing in the tweet
     """
@@ -64,12 +63,11 @@ def tokenize_tweet(inputRow, fields):
     # Convert to lowercase and get remove @mentions
     tokens = []
 
-    import string
     remove_punctuation = str.maketrans('', '', string.punctuation)
     for item in text.lower().split():
         if not item.startswith('@'):
             filtered_item = item.translate(remove_punctuation)
-            if filtered_item:
+            if filtered_item and filtered_item in stopwords:
                 tokens.append(filtered_item)
 
     return tokens
@@ -297,7 +295,6 @@ def predict_user_gmm(sc, tweets_to_predict, fields, model, radius=None, predict_
     return loc_est_by_user
 
 
-
 def train_gmm(sqlCtx, table_name, fields, min_occurrences=10, max_num_components=12, where_clause=''):
     """
     Train a set of GMMs for a given set of training data
@@ -318,16 +315,18 @@ def train_gmm(sqlCtx, table_name, fields, min_occurrences=10, max_num_components
                                     or (place is not null and place.bounding_box.type="Polygon")) %s'
                                    % (','.join(fields), table_name, where_clause))
 
+    line = open('src/stopwords/stopwords-nl.txt', 'r', encoding='utf-8')
+    stopwords = [word[1:-1] for word in line.readline().split(',')]
+
     model = tweets_w_geo.rdd.keyBy(lambda row: get_location_from_tweet(row))\
                             .filter(lambda location_row: location_row[0] is not None)\
-                            .flatMapValues(lambda row: tokenize_tweet(row, fields))\
+                            .flatMapValues(lambda row: tokenize_tweet(row, fields, stopwords))\
                             .map(lambda location_word: (location_word[1], location_word[0]))\
                             .groupByKey()\
                             .filter(lambda word_locations: len(list(word_locations[1])) >= min_occurrences)\
                             .mapValues(lambda locations: fit_gmm_to_locations(locations, max_num_components))\
                             .filter(lambda gmm_error: gmm_error[0] is not None)\
                             .collectAsMap()
-
 
     return model
 
