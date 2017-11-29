@@ -1,4 +1,4 @@
-from mongo_manager import MongoManager
+from smug.mongo_manager import MongoManager
 
 
 class MongoDBInitializer:

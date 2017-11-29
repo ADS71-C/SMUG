@@ -10,7 +10,8 @@ from smug.connection_manager import ConnectionManager
 class WordVectorProcessor:
     def __init__(self):
         self.mongo_manager = MongoManager()
-        self.reports = [result for result in self.mongo_manager.get_reports()]
+        self.reports = [result for result in self.mongo_manager.get_reports()
+                        if result.get('type', 'wordvec') == 'wordvec']
         model_location = pkg_resources.resource_filename('resources', 'word2vec.model')
         self.model = Word2Vec.load(model_location)
     def score(self, message):
@@ -41,4 +42,4 @@ def callback(ch, method, properties, body):
 if __name__ == '__main__':
     word_vector_processor = WordVectorProcessor()
     connection_manager = ConnectionManager()
-    connection_manager.subscribe_to_queue('process', callback)
+    connection_manager.subscribe_to_queue('process_wordvec', callback)
