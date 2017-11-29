@@ -9,10 +9,22 @@ from smug.importers.pandas_importer import PandasImporter
 
 class CsvImporter(PandasImporter):
     def process_files(self, files):
+        """
+        Processes a list of files individually
+        
+        :param files: array of files
+        :return: None
+        """
         for file in files:
             self.process_file(file)
 
     def process_file(self, file):
+        """
+        Process a single file and send results to smug
+
+        :param file: File URI to be read
+        :return: None
+        """
         filename = pkg_resources.resource_filename('resources', file)
         print('Sending {}'.format(file))
         df = pd.read_csv(filename, sep=';')

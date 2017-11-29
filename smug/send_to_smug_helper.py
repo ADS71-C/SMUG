@@ -13,6 +13,9 @@ from connection_manager import ConnectionManager
 
 
 class SendToSmugHelper:
+    """
+    A wrapper class that takes care of sending any sort of data to smug
+    """
     def __init__(self):
         self.connection_manager = ConnectionManager()
         env_location = pkg_resources.resource_filename('resources', '.env')
