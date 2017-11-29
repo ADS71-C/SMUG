@@ -52,5 +52,5 @@ if __name__ == '__main__':
              '.gz' in resource]
 
     twinl_importer = TwiNLImporter()
-    twinl_importer.process_files(files=files, large_analyses=False)
+    twinl_importer.process_files(files=files, large_analyses=True)
     exit(0)
