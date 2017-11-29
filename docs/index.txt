@@ -11,11 +11,12 @@ Welcome to SMUG's documentation!
    :caption: Contents:
 
    queues
+   dataschema
+   source/smug
 .. include:: ../readme.md
 
 Indices and tables
 ==================
-
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
