@@ -40,5 +40,8 @@ services:
   spark:
     build: ./resources/pyspark/.
     hostname: spark
+    ports:
+      - "8080:8080"
+      - "7077:7077"
     links:
       - mongodb
