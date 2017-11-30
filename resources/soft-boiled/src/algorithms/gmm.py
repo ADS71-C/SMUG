@@ -1,13 +1,18 @@
+"""
+    Changes have been made to this file after obtained from Github!
+    The original code was written by Lab41.
+"""
+
 from sklearn import mixture
 import numpy as np
-# local includes
+import os
 from src.utils.geo import bb_center, GeoCoord, haversine
 import statsmodels.sandbox.distributions.extras as ext
 import math
 import string
 import csv
 import itertools
-from collections import namedtuple, defaultdict
+from collections import namedtuple
 from pyspark import RDD
 
 GMMLocEstimate = namedtuple('LocEstimate', ['geo_coord', 'prob'])
@@ -43,7 +48,7 @@ def tokenize_tweet(inputRow, fields, stopwords):
     Args:
         inputRow (Row): A spark sql row containing a tweet
         fields (list): A list of field names which directs tokenize on which fields to use as source data
-        stopwords (list): A list with stopwords.
+        stopwords (set): A list with stopwords.
     Returns:
         tokens (list): A list of words appearing in the tweet
     """
@@ -294,6 +299,14 @@ def predict_user_gmm(sc, tweets_to_predict, fields, model, radius=None, predict_
 
     return loc_est_by_user
 
+def load_stopwords(file):
+    curdir = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
+    parentdir = os.path.abspath(os.path.join(curdir, os.pardir))
+    path = os.path.join(parentdir, file)
+    with open(path, 'r', encoding='utf-8') as f:
+        content = f.readlines()
+    return {word.strip() for word in content}
+
 
 def train_gmm(sqlCtx, table_name, fields, min_occurrences=10, max_num_components=12, where_clause=''):
     """
@@ -315,8 +328,9 @@ def train_gmm(sqlCtx, table_name, fields, min_occurrences=10, max_num_components
                                     or (place is not null and place.bounding_box.type="Polygon")) %s'
                                    % (','.join(fields), table_name, where_clause))
 
-    line = open('src/stopwords/stopwords-nl.txt', 'r', encoding='utf-8')
-    stopwords = {word[1:-1] for word in line.readline().split(',')}
+    stopwords_nl = load_stopwords('stopwords\stopwords-nl.txt')
+    stopwords_en = load_stopwords('stopwords\stopwords-en.txt')
+    stopwords = stopwords_nl | stopwords_en
 
     model = tweets_w_geo.rdd.keyBy(lambda row: get_location_from_tweet(row))\
                             .filter(lambda location_row: location_row[0] is not None)\
