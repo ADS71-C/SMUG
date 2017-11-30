@@ -20,7 +20,7 @@ class NlpProcessor:
         for report in self.reports:
             result = {}
             if report['mode'] == 'sentiment':
-                sentiment = tb.sentiment
+                sentiment = tb.translate(to='en').sentiment  # sentiment analysis only works in english
                 result['polarity'] = sentiment.polarity
                 result['subjectivity'] = sentiment.subjectivity
 
