@@ -1,15 +1,12 @@
-# todo: Dockerize spark so findspark can be deleted.
-import findspark
-findspark.init()
-findspark.find()
-
 import os
 import pkg_resources
 from pyspark.sql import SparkSession
 
 if __name__ == '__main__':
+    spark_url = os.environ.get("SPARK_URL", "local")
     spark = SparkSession \
         .builder \
+        .master(spark_url) \
         .appName("Proftaak") \
         .getOrCreate()
 

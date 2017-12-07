@@ -5,6 +5,7 @@ smug/utils/location_prediction/train_dataset_small
 
 resources/docker/*
 !resources/docker/telegraf.conf
+!resources/docker/hadoop.env
 resources/results/*
 resources/*.bz2
 ### Linux template
