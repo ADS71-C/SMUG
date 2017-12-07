@@ -1,7 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 
-/smug/utils/location_prediction/train_dataset
-/smug/utils/location_prediction/train_dataset_small
+smug/utils/location_prediction/train_dataset
+smug/utils/location_prediction/train_dataset_small
 
 resources/docker/*
 !resources/docker/telegraf.conf
