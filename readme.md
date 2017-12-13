@@ -12,7 +12,9 @@ In order to use the project the following dependencies have to be satisfied
 * Python3
 
 # Installation
-1 run `pip install -r requirements.txt`
+ 1. run `pip install -r requirements.txt`  
+ 2. Afterwards run `python -m textblob.download_corpora` to enable the NLP functionality.
+    These include some third-party licenses.
 
 # Usage instructions
 This project uses docker-compose thus to run the project you need to issue the command `docker-compose up`. 

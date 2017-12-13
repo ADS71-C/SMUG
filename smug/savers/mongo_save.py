@@ -6,7 +6,7 @@ import simplejson as json
 from bson import json_util
 import threading
 
-from mongo_manager import MongoManager
+from smug.mongo_manager import MongoManager
 from smug.connection_manager import ConnectionManager
 
 
