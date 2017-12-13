@@ -1,8 +1,12 @@
 import os
 import pkg_resources
+from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 
 if __name__ == '__main__':
+    env_location = pkg_resources.resource_filename('resources', '.env')
+    load_dotenv(env_location)
+
     spark_url = os.environ.get("SPARK_URL", "local")
     spark = SparkSession \
         .builder \
