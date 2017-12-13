@@ -23,6 +23,7 @@ class WordVectorProcessor:
             score = 0
             if words:
                 score = self.model.wv.n_similarity(report['parameters'], words)
+                score = ((-1 / (len(words) * 15 + 1)) + 1) * score
             if message['metadata']['type'] == 'comment':
                 score /= 2
             message['reports'].append({
