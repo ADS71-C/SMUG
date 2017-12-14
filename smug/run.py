@@ -28,6 +28,7 @@ def run():
         processes.append(subprocess.Popen(['python', 'preprocessors/preprocessing.py']))
     for i in range(processors):
         processes.append(subprocess.Popen(['python', 'processors/word_vectoring_processor.py']))
+        processes.append(subprocess.Popen(['python', 'processors/location_prediction_module.py']))
     for i in range(savers):
         processes.append(subprocess.Popen(['python', 'savers/mongo_save.py']))
 
