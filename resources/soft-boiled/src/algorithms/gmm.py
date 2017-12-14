@@ -288,8 +288,12 @@ def predict_user_gmm(sc, tweets_to_predict, fields, model, radius=None, predict_
     if not isinstance(tweets_to_predict, RDD):
         tweets_to_predict = tweets_to_predict.rdd
 
+    stopwords_nl = load_stopwords('stopwords/stopwords-nl.txt')
+    stopwords_en = load_stopwords('stopwords/stopwords-en.txt')
+    stopwords = stopwords_nl | stopwords_en
+
     tweets_by_user = tweets_to_predict.filter(lambda row: row != None and row.user!=None and row.user.id_str !=None)\
-                        .map(lambda tweet: (tweet.user.id_str, tokenize_tweet(tweet, fields)))\
+                        .map(lambda tweet: (tweet.user.id_str, tokenize_tweet(tweet, fields, stopwords)))\
                         .groupByKey(numPartitions=num_partitions)
 
     loc_est_by_user = tweets_by_user\
@@ -328,8 +332,8 @@ def train_gmm(sqlCtx, table_name, fields, min_occurrences=10, max_num_components
                                     or (place is not null and place.bounding_box.type="Polygon")) %s'
                                    % (','.join(fields), table_name, where_clause))
 
-    stopwords_nl = load_stopwords('stopwords\stopwords-nl.txt')
-    stopwords_en = load_stopwords('stopwords\stopwords-en.txt')
+    stopwords_nl = load_stopwords('stopwords/stopwords-nl.txt')
+    stopwords_en = load_stopwords('stopwords/stopwords-en.txt')
     stopwords = stopwords_nl | stopwords_en
 
     model = tweets_w_geo.rdd.keyBy(lambda row: get_location_from_tweet(row))\
@@ -366,8 +370,12 @@ def run_gmm_test(sc, sqlCtx, table_name, fields, model, where_clause=''):
     # for each tweet calculate most likely position
     model_bcast = sc.broadcast(model)
 
+    stopwords_nl = load_stopwords('stopwords/stopwords-nl.txt')
+    stopwords_en = load_stopwords('stopwords/stopwords-en.txt')
+    stopwords = stopwords_nl | stopwords_en
+
     errors_rdd = tweets_w_geo.rdd.keyBy(lambda row: get_location_from_tweet(row))\
-                                .flatMapValues(lambda row: get_most_likely_point(tokenize_tweet(row, fields), model_bcast))\
+                                .flatMapValues(lambda row: get_most_likely_point(tokenize_tweet(row, fields, stopwords), model_bcast))\
                                 .map(lambda true_geo_coord_est_loc: haversine(true_geo_coord_est_loc[0], true_geo_coord_est_loc[1].geo_coord))
 
     errors = np.array(errors_rdd.collect())
