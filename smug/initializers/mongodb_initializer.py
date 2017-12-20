@@ -15,7 +15,7 @@ class MongoDBInitializer:
             'verkoudheid',
             'koorts',
             'hoofdpijn',
-        ]}]
+        ]}, {'name': 'Location Prediction', 'enabled': True, 'parameters': []}]
         for report in default_reports:
             self.create_report(report)
 
