@@ -63,7 +63,7 @@ def tokenize_tweet(inputRow, fields, stopwords):
             except:
                 if inputRow.user.location is not None:
                     text.append(inputRow.user.location.strip())
-        text = ' '.join(text)
+    text = ' '.join(text)
 
     # Convert to lowercase and get remove @mentions
     tokens = []
@@ -292,8 +292,8 @@ def predict_user_gmm(sc, tweets_to_predict, fields, model, radius=None, predict_
     stopwords_en = load_stopwords('stopwords/stopwords-en.txt')
     stopwords = stopwords_nl | stopwords_en
 
-    tweets_by_user = tweets_to_predict.filter(lambda row: row != None and row.user!=None and row.user.id_str !=None)\
-                        .map(lambda tweet: (tweet.user.id_str, tokenize_tweet(tweet, fields, stopwords)))\
+    tweets_by_user = tweets_to_predict.filter(lambda row: row != None and row.user!=None and row.user !=None)\
+                        .map(lambda tweet: (tweet.user, tokenize_tweet(tweet, fields, stopwords)))\
                         .groupByKey(numPartitions=num_partitions)
 
     loc_est_by_user = tweets_by_user\
