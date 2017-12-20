@@ -33,7 +33,7 @@ class LocationPredictionModule:
 
     def gmm(self, message):
         tweet = self.sc.parallelize([{'user': message['author'], 'text': message['message']}]).map(convert_to_row).toDF()
-        estimated_locations = gmm.predict_user_gmm(self.sc, tweet, ['text', 'user'], self.model, radius=50.,
+        estimated_locations = gmm.predict_user_gmm(self.sc, tweet, ['text', 'user'], self.model,
                                                    predict_lower_bound=0.2,  num_partitions=1).collect()
         print(estimated_locations)
         message['reports'].append({
