@@ -180,14 +180,14 @@ def get_most_likely_point(tokens, model_bcast, radius=None):
             prob = predict_probability_radius(combined_gmm, radius, (best_lat, best_lon))
             return [GMMLocEstimate(GeoCoord(lat=best_lat, lon=best_lon), prob)]
         else:
-            return [GMMLocEstimate(GeoCoord(lat=best_lat, lon=best_lon), None)]
+            return [GMMLocEstimate(GeoCoord(lat=best_lat, lon=best_lon), 0)]
     elif len(models) == 1:
         (best_lat, best_lon) = models[0][0].means_[np.argmax(models[0][0].weights_)]
         if radius:
             prob = predict_probability_radius(models[0][0], radius, (best_lat, best_lon))
             return [GMMLocEstimate(GeoCoord(lat=best_lat, lon=best_lon), prob)]
         else:
-            return [GMMLocEstimate(GeoCoord(lat=best_lat, lon=best_lon), None)]
+            return [GMMLocEstimate(GeoCoord(lat=best_lat, lon=best_lon), 0)]
     else:
         return []
 
