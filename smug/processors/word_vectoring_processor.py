@@ -17,19 +17,19 @@ class WordVectorProcessor:
         self.model = Word2Vec.load(model_location)
 
     def score(self, message):
-        message['reports'] = []
         words = [word for word in message['metadata']['message_words'] if word in self.model.wv.vocab]
         for report in self.reports:
-            score = 0
-            if words:
-                score = self.model.wv.n_similarity(report['parameters'], words)
-            if message['metadata']['type'] == 'comment':
-                score /= 2
-            message['reports'].append({
-                'id': str(report['_id']),
-                'score': score,
-                'scored_words': words
-            })
+            if 'word vectoring' in report['name'].lower():
+                score = 0
+                if words:
+                    score = self.model.wv.n_similarity(report['parameters'], words)
+                if message['metadata']['type'] == 'comment':
+                    score /= 2
+                message['reports'].append({
+                    'id': str(report['_id']),
+                    'score': score,
+                    'scored_words': words
+                })
         return message
 
 
