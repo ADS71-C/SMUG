@@ -1,4 +1,4 @@
-Social Media User Grouper (SMUG)
+# Social Media User Grouper (SMUG)
 
 SMUG is a profiler which allows you to group social media users using big data.
 SMUG provides extra insight into tweets by running various kinds of analytics on it. 
@@ -12,7 +12,7 @@ In order to use the project the following dependencies have to be satisfied
 * Python3
 
 # Installation
- 1. run `pip install -r requirements.txt`  
+ 1. run `pip install -r requirements.txt`
  2. Afterwards run `python -m textblob.download_corpora` to enable the NLP functionality.
     These include some third-party licenses.
 
@@ -21,10 +21,14 @@ This project uses docker-compose thus to run the project you need to issue the c
 This will pull all the required images and runs all the containers. 
 There are several things needed to run the project correctly:
 
-* `.env` file. See `resources/.env.example` for the needed parameters
-* trained `word2vec` model.
+* `.env` file. See `resources/.env.example` for the needed parameters.
+* Twitter data. This can be in the form of a csv or streaming data if configured correctly.
+
+Optional:
+* A trained `word2vec` model for use with WordVectoring analysis.
     * If you don't have a trained model `utils/word_vectoring_model_generator.py` can do this for you. You will need to place a wikipedia dump in the `resources` folder and alter the script to use the correct name.
-* csv files containing data. In our case this will be twitter data from our provider.
+* A Gaussian Mixture Model for location prediction modules.
+    * A trained model can be created using the included utility.
 
 # Technical information 
 ## Local development
