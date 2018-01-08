@@ -27,18 +27,21 @@ class TwiNLImporter:
 
     @SendToSmugHelper()
     def process_message(self, original_message):
-        return {
-            'message': original_message['text'],
-            'author': original_message['user']['name'],
-            'metadata': {
-                'date': datetime.fromtimestamp(int(original_message['timestamp_ms']) / 1000),
-                'url': original_message['id'],
-                'type': 'post',
-                'source': 'twitter',
-                'source_import': 'twinl',
-                'lang': locale.normalize('{}.utf-8'.format(original_message['lang']))
+        try:
+            return {
+                'message': original_message['text'],
+                'author': original_message['user']['name'],
+                'metadata': {
+                    'date': datetime.fromtimestamp(int(original_message['timestamp_ms']) / 1000),
+                    'url': original_message['id'],
+                    'type': 'post',
+                    'source': 'twitter',
+                    'source_import': 'twinl',
+                    'lang': locale.normalize('{}.utf-8'.format(original_message['lang']))
+                }
             }
-        }
+        except KeyError:
+            print(original_message)
 
 
 if __name__ == '__main__':
