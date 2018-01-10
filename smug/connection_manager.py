@@ -33,7 +33,7 @@ class ConnectionManager:
 
         credentials = PlainCredentials(username=username, password=password)
 
-        virtual_host = os.environ.get("RABBITMQ_DEFAULT_VHOST");
+        virtual_host = os.environ.get("RABBITMQ_DEFAULT_VHOST")
         params = pika.ConnectionParameters(host=url, port=5672, virtual_host=virtual_host, credentials=credentials)
 
         self.connection = pika.BlockingConnection(parameters=params)
