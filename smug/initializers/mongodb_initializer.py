@@ -1,4 +1,4 @@
-from mongo_manager import MongoManager
+from smug.mongo_manager import MongoManager
 
 
 class MongoDBInitializer:
@@ -15,7 +15,7 @@ class MongoDBInitializer:
             'verkoudheid',
             'koorts',
             'hoofdpijn',
-        ]}]
+        ]}, {'name': 'Location Prediction', 'enabled': True, 'parameters': []}]
         for report in default_reports:
             self.create_report(report)
 

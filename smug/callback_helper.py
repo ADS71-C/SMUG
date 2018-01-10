@@ -24,3 +24,25 @@ class CallbackForward:
 
             channel.basic_ack(delivery_tag=method.delivery_tag)
         return wrapped_callback
+
+
+class CallbackExchangeForward:
+    def __init__(self, forward_exchange_type=None):
+        if forward_exchange_type is not None:
+            self.forward_exchange = ConnectionManager.get_exchange_name(forward_exchange_type)
+        else:
+            self.forward_exchange = forward_exchange_type
+
+    def __call__(self, func):
+        outer_self = self
+
+        @wraps(func)
+        def wrapped_callback(channel, method, properties, body):
+            result = func(channel, method, properties, body)
+
+            if result is not None and outer_self.forward_exchange is not None:
+                message = json.dumps(result, default=json_util.default)
+                channel.basic_publish(exchange=outer_self.forward_exchange, routing_key='', body=message)
+
+            channel.basic_ack(delivery_tag=method.delivery_tag)
+        return wrapped_callback

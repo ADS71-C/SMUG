@@ -74,7 +74,7 @@ services:
     links:
       - mongodb
     volumes:
-      - ./resources/docker/mongodb:/data/db
+      - ./resources/docker/spark:/data
   spark-worker-1:
     build: ./resources/pyspark/.
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
@@ -89,6 +89,8 @@ services:
       - ./resources/docker/hadoop.env
     links:
       - spark-master
+    volumes:
+      - ./resources/docker/spark:/data
     expose:
       - 8881
     ports:
@@ -107,6 +109,8 @@ services:
       - ./resources/docker/hadoop.env
     links:
       - spark-master
+    volumes:
+      - ./resources/docker/spark:/data
     expose:
       - 8882
     ports:
