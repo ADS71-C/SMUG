@@ -16,7 +16,8 @@ class StreamingListener(tweepy.StreamListener):
     def __init__(self):
         super().__init__()
         env_location = pkg_resources.resource_filename('resources', '.env')
-        load_dotenv(env_location)
+        if os.environ.get('DOTENV_LOADED', '0') != '1':
+            load_dotenv(env_location)
         consumer_token = os.environ.get("TWITTER_CONSUMER_TOKEN", "TOKEN")
         consumer_secret = os.environ.get("TWITTER_CONSUMER_SECRET", "SECRET")
         access_token = os.environ.get("TWITTER_ACCESS_TOKEN", "TOKEN")

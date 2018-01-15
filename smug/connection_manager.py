@@ -26,7 +26,8 @@ exchanges = {
 class ConnectionManager:
     def __init__(self):
         env_location = pkg_resources.resource_filename('resources', '.env')
-        load_dotenv(env_location)
+        if os.environ.get('DOTENV_LOADED', '0') != '1':
+            load_dotenv(env_location)
         username = os.environ.get("RABBITMQ_DEFAULT_USER")
         password = os.environ.get("RABBITMQ_DEFAULT_PASS")
         url = os.environ.get("RABBITMQ_URL", "localhost")
@@ -34,7 +35,8 @@ class ConnectionManager:
         credentials = PlainCredentials(username=username, password=password)
 
         virtual_host = os.environ.get("RABBITMQ_DEFAULT_VHOST")
-        params = pika.ConnectionParameters(host=url, port=5672, virtual_host=virtual_host, credentials=credentials)
+        params = pika.ConnectionParameters(host=url, port=5672, virtual_host=virtual_host, credentials=credentials,
+                                           connection_attempts=10, retry_delay=10)
 
         self.connection = pika.BlockingConnection(parameters=params)
         self.channel = self.connection.channel()

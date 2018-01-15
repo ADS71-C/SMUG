@@ -16,7 +16,8 @@ class SendToSmugHelper:
     def __init__(self):
         self.connection_manager = ConnectionManager()
         env_location = pkg_resources.resource_filename('resources', '.env')
-        load_dotenv(env_location)
+        if os.environ.get('DOTENV_LOADED', '0') != '1':
+            load_dotenv(env_location)
         self.personal = os.environ.get("BLAKE2D_KEY", "topsecretkey").encode()
 
     def __call__(self, func):

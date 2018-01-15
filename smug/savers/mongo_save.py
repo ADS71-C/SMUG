@@ -81,7 +81,8 @@ class MongoSaveWatchdog:
 
 if __name__ == '__main__':
     env_location = pkg_resources.resource_filename('resources', '.env')
-    load_dotenv(env_location)
+    if os.environ.get('DOTENV_LOADED', '0') != '1':
+        load_dotenv(env_location)
     mongouri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/smug")
     mongodb = os.environ.get("MONGODB_DATABASE", "smug")
     write_buffer_size = int(os.environ.get("MONGODB_WRITE_BUFFER", 100))

@@ -7,7 +7,8 @@ from pymongo import MongoClient
 class MongoManager:
     def __init__(self):
         env_location = pkg_resources.resource_filename('resources', '.env')
-        load_dotenv(env_location)
+        if os.environ.get('DOTENV_LOADED', '0') != '1':
+            load_dotenv(env_location)
 
         mongourl = os.environ.get("MONGO_URI", "mongodb://localhost:27017/smug")
         self.database = os.environ.get("MONGO_DATABASE", "smug")
