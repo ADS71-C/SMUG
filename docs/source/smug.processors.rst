@@ -4,6 +4,14 @@ smug\.processors package
 Submodules
 ----------
 
+smug\.processors\.nlp\_processor module
+---------------------------------------
+
+.. automodule:: smug.processors.nlp_processor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 smug\.processors\.word\_vectoring\_processor module
 ---------------------------------------------------
 

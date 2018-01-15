@@ -4,6 +4,14 @@ smug\.utils package
 Submodules
 ----------
 
+smug\.utils\.graph\_maker module
+--------------------------------
+
+.. automodule:: smug.utils.graph_maker
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 smug\.utils\.word\_vectoring\_model\_generator module
 -----------------------------------------------------
 

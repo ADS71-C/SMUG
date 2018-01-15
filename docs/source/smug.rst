@@ -1,4 +1,4 @@
-SMUG package
+smug package
 ============
 
 Subpackages
@@ -7,7 +7,6 @@ Subpackages
 .. toctree::
 
     smug.cleaners
-    smug.formatters
     smug.importers
     smug.initializers
     smug.preprocessors

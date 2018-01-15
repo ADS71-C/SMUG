@@ -4,6 +4,14 @@ smug\.importers package
 Submodules
 ----------
 
+smug\.importers\.coosto\_importer module
+----------------------------------------
+
+.. automodule:: smug.importers.coosto_importer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 smug\.importers\.csv\_importer module
 -------------------------------------
 
@@ -16,14 +24,6 @@ smug\.importers\.mass\_importer module
 --------------------------------------
 
 .. automodule:: smug.importers.mass_importer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-smug\.importers\.pandas\_importer module
-----------------------------------------
-
-.. automodule:: smug.importers.pandas_importer
     :members:
     :undoc-members:
     :show-inheritance:
