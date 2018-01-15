@@ -1,5 +1,8 @@
+from connection_manager import ConnectionManager
+
+
 class RabbitMQInitializer:
-    def __init__(self, connection_manager):
+    def __init__(self, connection_manager=ConnectionManager()):
         self.connection_manager = connection_manager
         self.exchange_initialize()
         self.channel_initialize()
@@ -13,7 +16,8 @@ class RabbitMQInitializer:
                 result = self.connection_manager.channel.queue_declare(queue=name)
                 self.connection_manager.channel.queue_bind(exchange=exchange, queue=result.method.queue)
             else:
-                durable = self.connection_manager.get_queue_name('save') in queue
+                durable = self.connection_manager.get_queue_name(
+                    'save') in queue or self.connection_manager.get_queue_name('latest') in queue
                 self.connection_manager.channel.queue_declare(queue=queue, durable=durable)
 
     def exchange_initialize(self):

@@ -5,17 +5,23 @@ class MongoDBInitializer:
     def __init__(self):
         self.mongo_manager = MongoManager()
         self.create_indexes('metadata.url', self.mongo_manager.message_collection, unique=True)
-        self.create_indexes('analytics.sickness_score', self.mongo_manager.message_collection)
+        self.create_indexes('reports.score', self.mongo_manager.message_collection)
         self.create_indexes('metadata.date', self.mongo_manager.message_collection)
         self.create_indexes('name', self.mongo_manager.report_collection, unique=True)
-        default_reports = [{'name': 'Word vectoring', 'enabled': True, 'parameters': [
-            'ziek',
-            'griep',
-            'verkouden',
-            'verkoudheid',
-            'koorts',
-            'hoofdpijn',
-        ]}]
+        default_reports = [
+            {'name': 'Word vectoring',
+             'enabled': True,
+             'parameters': [
+                 'ziek',
+                 'griep',
+                 'verkouden',
+                 'keelpijn',
+                 'spierpijn',
+                 'koorts',
+                 'hoesten'
+             ]
+             }
+        ]
         for report in default_reports:
             self.create_report(report)
 

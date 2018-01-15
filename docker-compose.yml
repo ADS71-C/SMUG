@@ -1,11 +1,12 @@
 version: "3"
 services:
   rabbitmq:
-    image: rabbitmq:management-alpine
+    image: byteflair/rabbitmq-stomp
     env_file:
       - ./resources/.env
     ports:
       - "15672:15672"
+      - "61613:15674"
       - "5672:5672"
   telegraf:
     image: telegraf
