@@ -3,7 +3,7 @@ import pkg_resources
 from pyspark.sql import SparkSession
 
 if __name__ == '__main__':
-    spark_url = os.environ.get("SPARK_URL", "local")
+    spark_url = os.environ.get("SPARK_URL", "localhost")
     spark = SparkSession \
         .builder \
         .master(spark_url) \

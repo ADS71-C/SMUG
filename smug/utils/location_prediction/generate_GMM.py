@@ -7,7 +7,7 @@ if __name__ == '__main__':
     env_location = pkg_resources.resource_filename('resources', '.env')
     load_dotenv(env_location)
 
-    spark_url = os.environ.get("SPARK_URL", "local")
+    spark_url = os.environ.get("SPARK_URL", "localhost")
     spark = SparkSession \
         .builder \
         .master(spark_url) \

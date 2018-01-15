@@ -8,6 +8,8 @@ resources/docker/*
 !resources/docker/hadoop.env
 resources/results/*
 resources/*.bz2
+resources/location_prediction.csv
+resources/soft-boiled.zip
 ### Linux template
 *~
 

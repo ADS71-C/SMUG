@@ -7,28 +7,28 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
-#  telegraf:
-#    image: telegraf
-#    volumes:
-#      - ./resources/docker/telegraf.conf:/etc/telegraf/telegraf.conf:rw
-#    links:
-#      - influx
-#      - rabbitmq
-#  influx:
-#    image: influxdb
-#    volumes:
-#      - ./resources/docker/influx:/var/lib/influxdb
-#  grafana:
-#    image: grafana/grafana
-#    environment:
-#      - "GF_SERVER_ROOT_URL=http://grafana.server.name"
-#      - "GF_SECURITY_ADMIN_PASSWORD=queenelizabeth"
-#    ports:
-#      - "3000:3000"
-#    volumes:
-#      - ./resources/docker/grafana_storage:/var/lib/grafana
-#    depends_on:
-#      - influx
+  telegraf:
+    image: telegraf
+    volumes:
+      - ./resources/docker/telegraf.conf:/etc/telegraf/telegraf.conf:rw
+    links:
+      - influx
+      - rabbitmq
+  influx:
+    image: influxdb
+    volumes:
+      - ./resources/docker/influx:/var/lib/influxdb
+  grafana:
+    image: grafana/grafana
+    environment:
+      - "GF_SERVER_ROOT_URL=http://grafana.server.name"
+      - "GF_SECURITY_ADMIN_PASSWORD=queenelizabeth"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./resources/docker/grafana_storage:/var/lib/grafana
+    depends_on:
+      - influx
   mongodb:
     image: mongo:latest
     expose:
