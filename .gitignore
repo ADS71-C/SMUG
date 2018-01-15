@@ -3,10 +3,15 @@
 *.model*
 # Created by .ignore support plugin (hsz.mobi)
 
+smug/utils/location_prediction/train_dataset
+smug/utils/location_prediction/train_dataset_small
+
 resources/docker/*
 !resources/docker/telegraf.conf
+!resources/docker/hadoop.env
 resources/results/*
 resources/*.bz2
+resources/location_prediction.csv
 resources/soft-boiled.zip
 ### Linux template
 *~
@@ -97,6 +102,7 @@ target/
 
 # pyenv
 .python-version
+.tool-versions
 
 # celery beat schedule file
 celerybeat-schedule
