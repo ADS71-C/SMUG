@@ -7,6 +7,7 @@ resources/docker/*
 !resources/docker/telegraf.conf
 resources/results/*
 resources/*.bz2
+resources/soft-boiled.zip
 ### Linux template
 *~
 
