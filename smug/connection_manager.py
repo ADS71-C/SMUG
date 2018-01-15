@@ -5,31 +5,36 @@ import json
 import pkg_resources
 from dotenv import load_dotenv
 
-queues = {
-    'format': os.environ.get("FORMATTING_QUEUE_NAME", "1_format"),
-    'clean': os.environ.get("CLEANING_QUEUE_NAME", "2_clean"),
-    'preprocess': os.environ.get("PREPROCESSING_QUEUE_NAME", "3_preprocess"),
-    'process_wordvec': json.loads(os.environ.get("PROCESSING_QUEUE_WORDVEC_NAME",
-                                                 '{"name":"4_process_wordvec","exchange":"4_process"}')),
-    'process_location': json.loads(os.environ.get("PROCESSING_QUEUE_LOCATION_NAME",
-                                                  '{"name":"4_process_location","exchange":"4_process"}')),
-    'process_nlp': json.loads(os.environ.get("PROCESSING_QUEUE_NLP_NAME",
-                                             '{"name":"4_process_nlp","exchange":"4_process"}')),
-    'save': os.environ.get("SAVE_QUEUE_NAME", "5_save"),
-}
+queues = {}
 
-exchanges = {
-    'process': {'name': os.environ.get('PROCESSING_EXCHANGE_NAME', '4_process'), 'type': 'fanout'}
-}
+exchanges = {}
+
+
+def try_parse_json(json_text: str):
+    if not json_text.startswith('{'):
+        return json_text
+    try:
+        return json.loads(json_text)
+    except json.JSONDecodeError:
+        return json_text
 
 
 class ConnectionManager:
     def __init__(self):
+        global queues, exchanges
         env_location = pkg_resources.resource_filename('resources', '.env')
         load_dotenv(env_location)
         username = os.environ.get("RABBITMQ_DEFAULT_USER")
         password = os.environ.get("RABBITMQ_DEFAULT_PASS")
         url = os.environ.get("RABBITMQ_URL", "localhost")
+
+        exchanges = {k[18:].lower(): try_parse_json(v)
+                     for k, v in os.environ.items()
+                     if k.startswith('RABBITMQ_EXCHANGE_')}
+        queues = {k[15:].lower(): try_parse_json(v)
+                  for k, v in os.environ.items()
+                  if k.startswith('RABBITMQ_QUEUE_')}
+
 
         credentials = PlainCredentials(username=username, password=password)
 
