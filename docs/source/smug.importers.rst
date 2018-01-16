@@ -12,13 +12,6 @@ smug\.importers\.coosto\_importer module
     :undoc-members:
     :show-inheritance:
 
-smug\.importers\.csv\_importer module
--------------------------------------
-
-.. automodule:: smug.importers.csv_importer
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 smug\.importers\.mass\_importer module
 --------------------------------------
