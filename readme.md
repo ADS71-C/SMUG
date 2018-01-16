@@ -36,7 +36,7 @@ While developing you can opt to run the python files locally on your system. Thi
 A `run.py` is also  which allows you to start multiple workers at once. 
 `run.py` start all the workers necessary for basic processing.
 Now all you need is data. 
-This can be done by running `importers/csv_importer.py` which will prompt you for a csv file. 
+This can be done by running `importers/coosto_importer.py` which will prompt you for a csv file.
 This csv file is then put into SMUG.
 This csv file should be located somewhere in the `resources` folder
 ## Command ordering

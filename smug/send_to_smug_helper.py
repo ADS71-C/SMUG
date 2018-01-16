@@ -13,6 +13,9 @@ from connection_manager import ConnectionManager
 
 
 class SendToSmugHelper:
+    """
+    A wrapper class that takes care of sending any sort of data to smug
+    """
     def __init__(self):
         self.connection_manager = ConnectionManager()
         env_location = pkg_resources.resource_filename('resources', '.env')
@@ -25,6 +28,7 @@ class SendToSmugHelper:
         @wraps(func)
         def wrapper(*args, **kwds):
             message = func(*args, **kwds)
+            message['reports'] = []
 
             if message is not None and 'nl' in message['metadata']['lang']:
                 author_hash = outer_self._hash(message['author'])

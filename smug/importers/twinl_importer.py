@@ -9,17 +9,20 @@ from send_to_smug_helper import SendToSmugHelper
 
 
 class TwiNLImporter:
-    def process_files(self, files, large_analyses=False):
-        for file in files:
-            self.process_file(file, large_analyses)
+    def __init__(self, large_analysis=False):
+        self.large_analysis = large_analysis
 
-    def process_file(self, file, large_analyses=False):
+    def process_files(self, files):
+        for file in files:
+            self.process_file(file)
+
+    def process_file(self, file):
         filename = pkg_resources.resource_filename('resources', file)
 
         with gzip.open(filename, 'rt') as f:
             print('Sending {}'.format(file))
             for index, content in enumerate(f.readlines()):
-                if large_analyses:
+                if self.large_analysis:
                     if index % 10 != 0:
                         continue
                 original_message = json.loads(content)
@@ -54,6 +57,6 @@ if __name__ == '__main__':
     files = [resource for resource in pkg_resources.resource_listdir('resources', '') if
              '.gz' in resource]
 
-    twinl_importer = TwiNLImporter()
-    twinl_importer.process_files(files=files, large_analyses=False)
+    twinl_importer = TwiNLImporter(large_analysis=True)
+    twinl_importer.process_files(files=files)
     exit(0)
