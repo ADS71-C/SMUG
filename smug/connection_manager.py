@@ -72,7 +72,8 @@ class ConnectionManager:
         credentials = PlainCredentials(username=username, password=password)
 
         virtual_host = os.environ.get("RABBITMQ_DEFAULT_VHOST")
-        params = pika.ConnectionParameters(host=url, port=5672, virtual_host=virtual_host, credentials=credentials)
+        params = pika.ConnectionParameters(host=url, port=5672, virtual_host=virtual_host, credentials=credentials,
+                                           connection_attempts=10, retry_delay=10)
 
         self.connection = pika.BlockingConnection(parameters=params)
         self.channel = self.connection.channel()

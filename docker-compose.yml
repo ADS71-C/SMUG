@@ -8,34 +8,86 @@ services:
       - "15672:15672"
       - "61613:15674"
       - "5672:5672"
-  telegraf:
-    image: telegraf
     volumes:
-      - ./resources/docker/telegraf.conf:/etc/telegraf/telegraf.conf:rw
-    links:
-      - influx
-      - rabbitmq
-  influx:
-    image: influxdb
-    volumes:
-      - ./resources/docker/influx:/var/lib/influxdb
-  grafana:
-    image: grafana/grafana
-    environment:
-      - "GF_SERVER_ROOT_URL=http://grafana.server.name"
-      - "GF_SECURITY_ADMIN_PASSWORD=queenelizabeth"
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./resources/docker/grafana_storage:/var/lib/grafana
+      - ./resources/docker/rabbitmq:/var/lib/rabbitmq
+#  telegraf:
+#    image: telegraf
+#    volumes:
+#      - ./resources/docker/telegraf.conf:/etc/telegraf/telegraf.conf:rw
+#    links:
+#      - influx
+#      - rabbitmq
+#  influx:
+#    image: influxdb
+#    volumes:
+#      - ./resources/docker/influx:/var/lib/influxdb
+#  grafana:
+#    image: grafana/grafana
+#    environment:
+#      - "GF_SERVER_ROOT_URL=http://grafana.server.name"
+#      - "GF_SECURITY_ADMIN_PASSWORD=queenelizabeth"
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - ./resources/docker/grafana_storage:/var/lib/grafana
+#    depends_on:
+#      - influx
+  cleaner:
+    build:
+      context: .
+      dockerfile: docker/cleaner/Dockerfile
+    env_file:
+      - resources/.env
     depends_on:
-      - influx
+      - rabbitmq
+  preprocessor:
+    build:
+      context: .
+      dockerfile: docker/preprocessor/Dockerfile
+    env_file:
+      - resources/.env
+    depends_on:
+      - rabbitmq
+#  processor_location:
+#    build:
+#      context: .
+#      dockerfile: docker/processor_location/Dockerfile
+#    env_file:
+#      - resources/.env
+#  processor_nlp:
+#    build:
+#      context: .
+#      dockerfile: docker/processor_nlp/Dockerfile
+#    env_file:
+#      - resources/.env
+  processor_wordvec:
+    build:
+      context: .
+      dockerfile: docker/processor_wordvec/Dockerfile
+    env_file:
+      - resources/.env
+    volumes:
+      - ./resources/model:/usr/src/app/resources/model
+    depends_on:
+      - rabbitmq
+      - mongodb
+  saver:
+    build:
+      context: .
+      dockerfile: docker/savers/Dockerfile
+    env_file:
+      - resources/.env
+    depends_on:
+      - rabbitmq
+      - mongodb
   mongodb:
     image: mongo:latest
     expose:
       - 27017
     ports:
       - "27017:27017"
+    volumes:
+      - ./resources/docker/mongodb:/data/db
 
   hadoop-namenode:
     image: bde2020/hadoop-namenode:1.1.0-hadoop2.8-java8

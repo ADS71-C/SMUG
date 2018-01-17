@@ -33,7 +33,8 @@ class MongoConfig:
     def __init__(self, mongo_url: str = '', database: str = '', port:int = -1, message_collection_name: str = '',
                  report_collection_name: str = ''):
         env_location = pkg_resources.resource_filename('resources', '.env')
-        load_dotenv(env_location)
+        if os.environ.get('DOTENV_LOADED', '0') != '1':
+            load_dotenv(env_location)
 
         self.mongo_url = mongo_url if mongo_url != '' else os.environ.get("MONGO_URI", "mongodb://localhost:27017/smug")
         self.database = database if database != '' else os.environ.get("MONGO_DATABASE", "smug")

@@ -13,7 +13,7 @@ class WordVectorProcessor:
         self.mongo_manager = MongoManager()
         self.reports = [result for result in self.mongo_manager.get_reports()
                         if result.get('type', 'wordvec') == 'wordvec']
-        model_location = pkg_resources.resource_filename('resources', 'word2vec.model')
+        model_location = pkg_resources.resource_filename('resources', 'model/word2vec.model')
         self.model = Word2Vec.load(model_location)
 
     def score(self, message):
