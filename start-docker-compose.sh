@@ -18,8 +18,9 @@ python3 smug/initializers/initializer.py
 
 cat <<EOF
 Now you can start your services using docker-compose up -d --no-recreate [services...]
+No services for all services
 If you want some services to run multiple times, start them with the following arguments after --no-recreate:
     --scale [servicename]=[count]
 e.g.
-docker-compose up -d --no-recreate --scale processor_wordvec=2 cleaner preprocessor processor_wordvec saver
+docker-compose up -d --no-recreate --scale processor_wordvec=2
 EOF
