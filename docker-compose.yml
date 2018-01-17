@@ -54,7 +54,7 @@ services:
 #      dockerfile: docker/processor_location/Dockerfile
 #    env_file:
 #      - resources/.env
-#  processor_wordvec:
+#  processor_nlp:
 #    build:
 #      context: .
 #      dockerfile: docker/processor_nlp/Dockerfile
