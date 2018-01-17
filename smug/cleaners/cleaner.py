@@ -11,7 +11,6 @@ def clean(message):
 
     if 'metadata' not in message:
         return None  # no metadata provided! Should not happen
-
     if 'rt' in message['message'].lower():
         return None
     if 'http' in message['message']:

@@ -9,7 +9,7 @@ def run():
     print('Sending data')
 
     for i in range(importers):
-        processes.append(subprocess.Popen(['python', 'csv_importer.py', '--files', 'sample_alltweets.csv']))
+        processes.append(subprocess.Popen(['python', 'coosto_importer.py', '--files', 'sample_alltweets.csv']))
 
     processes[::-1][0].wait()
     exit(0)

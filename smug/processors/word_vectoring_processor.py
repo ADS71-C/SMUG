@@ -17,7 +17,6 @@ class WordVectorProcessor:
         self.model = Word2Vec.load(model_location)
 
     def score(self, message):
-        message['reports'] = []
         words = [word for word in message['metadata']['message_words'] if word in self.model.wv.vocab]
         for report in self.reports:
             score = 0

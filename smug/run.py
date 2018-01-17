@@ -8,7 +8,6 @@ from smug.connection_manager import ConnectionManager
 
 processes = []
 
-formatters = 2
 cleaners = 2
 preprocessors = 1
 processors = 2
@@ -20,14 +19,14 @@ importers = 0
 def run():
     subprocess.run(['python', 'initializers/initializer.py'])
 
-    for i in range(formatters):
-        processes.append(subprocess.Popen(['python', 'formatters/formatter.py']))
     for i in range(cleaners):
         processes.append(subprocess.Popen(['python', 'cleaners/cleaner.py']))
     for i in range(preprocessors):
         processes.append(subprocess.Popen(['python', 'preprocessors/preprocessing.py']))
     for i in range(processors):
         processes.append(subprocess.Popen(['python', 'processors/word_vectoring_processor.py']))
+    for i in range(processors):
+        processes.append(subprocess.Popen(['python', 'processors/location_prediction_module.py']))
     for i in range(savers):
         processes.append(subprocess.Popen(['python', 'savers/mongo_save.py']))
 
