@@ -1,7 +1,7 @@
 import os
 import pkg_resources
 
-from lib.dotenv import load_dotenv
+from dotenv import load_dotenv
 from smug.connection_manager import ConnectionManager
 from smug.initializers.rabbitmq_initializer import RabbitMQInitializer
 from smug.initializers.mongodb_initializer import MongoDBInitializer

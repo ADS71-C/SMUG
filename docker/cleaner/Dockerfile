@@ -1,3 +1,3 @@
-FROM smug-base
+FROM smug-source-base
 
 CMD [ "python", "./smug/cleaners/cleaner.py" ]
