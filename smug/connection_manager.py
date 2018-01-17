@@ -6,10 +6,6 @@ import pkg_resources
 from dotenv import load_dotenv
 import sys
 
-queues = {}
-
-exchanges = {}
-
 
 def try_parse_json(json_text: str):
     if not json_text.startswith('{'):
@@ -18,6 +14,20 @@ def try_parse_json(json_text: str):
         return json.loads(json_text)
     except json.JSONDecodeError:
         return json_text
+
+
+env_location = pkg_resources.resource_filename('resources', '.env')
+
+if os.environ.get('DOTENV_LOADED', '0') != '1':
+    load_dotenv(env_location)
+
+exchanges = {k[18:].lower(): try_parse_json(v)
+             for k, v in os.environ.items()
+             if k.startswith('RABBITMQ_EXCHANGE_')}
+queues = {k[15:].lower(): try_parse_json(v)
+          for k, v in os.environ.items()
+          if k.startswith('RABBITMQ_QUEUE_')}
+
 
 class ConnectionManager:
     """
@@ -50,9 +60,6 @@ class ConnectionManager:
     def __init__(self, username: str = "", password: str = "", url: str = "", prefetch_count: int = -2):
         if 'sphinx' in sys.modules:
             return # don't load when sphinx is running
-        env_location = pkg_resources.resource_filename('resources', '.env')
-
-        load_dotenv(env_location)
         if username == "":
             username = os.environ.get("RABBITMQ_DEFAULT_USER")
         if password == "":
@@ -61,14 +68,6 @@ class ConnectionManager:
             url = os.environ.get("RABBITMQ_URL", "localhost")
         if prefetch_count == -2:
             self.prefetch_count = int(os.environ.get("PREFETCH_COUNT", 500))
-
-        exchanges = {k[18:].lower(): try_parse_json(v)
-                     for k, v in os.environ.items()
-                     if k.startswith('RABBITMQ_EXCHANGE_')}
-        queues = {k[15:].lower(): try_parse_json(v)
-                  for k, v in os.environ.items()
-                  if k.startswith('RABBITMQ_QUEUE_')}
-
 
         credentials = PlainCredentials(username=username, password=password)
 
