@@ -6,23 +6,18 @@ import pkg_resources
 from dotenv import load_dotenv
 import sys
 
-queues = {
-    'clean': os.environ.get("CLEANING_QUEUE_NAME", "1_clean"),
-    'preprocess': os.environ.get("PREPROCESSING_QUEUE_NAME", "2_preprocess"),
-    'process_wordvec': json.loads(os.environ.get("PROCESSING_QUEUE_WORDVEC_NAME",
-                                                 '{"name":"3_process_wordvec","exchange":"3_process"}')),
-    'process_location': json.loads(os.environ.get("PROCESSING_QUEUE_LOCATION_NAME",
-                                                  '{"name":"3_process_location","exchange":"3_process"}')),
-    'process_nlp': json.loads(os.environ.get("PROCESSING_QUEUE_NLP_NAME",
-                                             '{"name":"3_process_nlp","exchange":"3_process"}')),
-    'save': os.environ.get("SAVE_QUEUE_NAME", "4_save"),
-    'latest': "5_latest"
-}
+queues = {}
 
-exchanges = {
-    'process': {'name': os.environ.get('PROCESSING_EXCHANGE_NAME', '3_process'), 'type': 'fanout'}
-}
+exchanges = {}
 
+
+def try_parse_json(json_text: str):
+    if not json_text.startswith('{'):
+        return json_text
+    try:
+        return json.loads(json_text)
+    except json.JSONDecodeError:
+        return json_text
 
 class ConnectionManager:
     """
@@ -66,6 +61,14 @@ class ConnectionManager:
             url = os.environ.get("RABBITMQ_URL", "localhost")
         if prefetch_count == -2:
             self.prefetch_count = int(os.environ.get("PREFETCH_COUNT", 500))
+
+        exchanges = {k[18:].lower(): try_parse_json(v)
+                     for k, v in os.environ.items()
+                     if k.startswith('RABBITMQ_EXCHANGE_')}
+        queues = {k[15:].lower(): try_parse_json(v)
+                  for k, v in os.environ.items()
+                  if k.startswith('RABBITMQ_QUEUE_')}
+
 
         credentials = PlainCredentials(username=username, password=password)
 
