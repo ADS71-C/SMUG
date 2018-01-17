@@ -4,6 +4,7 @@ import os
 import json
 import pkg_resources
 from dotenv import load_dotenv
+import sys
 
 queues = {
     'clean': os.environ.get("CLEANING_QUEUE_NAME", "1_clean"),
@@ -52,6 +53,8 @@ class ConnectionManager:
     """
 
     def __init__(self, username: str = "", password: str = "", url: str = "", prefetch_count: int = -2):
+        if 'sphinx' in sys.modules:
+            return # don't load when sphinx is running
         env_location = pkg_resources.resource_filename('resources', '.env')
 
         load_dotenv(env_location)
